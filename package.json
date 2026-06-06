@@ -1,0 +1,28 @@
+{
+  "name": "ugc-otomation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UGC AI video uretim otomasyonu - magazalar icin OpenRouter + fal.ai (flux + kling) ile gercekci UGC videolari uretir, Google Drive'a yukler ve e-posta ile bildirir.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "get-google-token": "node scripts/get-google-token.mjs"
+  },
+  "dependencies": {
+    "@fal-ai/client": "^1.6.2",
+    "googleapis": "^144.0.0",
+    "next": "^15.1.6",
+    "nodemailer": "^6.9.16",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/nodemailer": "^6.4.17",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "typescript": "^5.7.3"
+  }
+}

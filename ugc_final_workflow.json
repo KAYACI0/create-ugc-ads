@@ -1,0 +1,956 @@
+{
+  "name": "ugc-prototipal copy",
+  "nodes": [
+    {
+      "id": "02c4f12b-a61f-49d0-8f4a-5cbb4eecdd38",
+      "name": "analyze_product",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1584,
+        272
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"google/gemini-2.0-flash-001\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"**// ROLE & GOAL //**\\nYou are an expert Casting Director and Consumer Psychologist. Your entire focus is on understanding people. Your sole task is to analyze the product in the provided image and generate a single, highly-detailed profile of the ideal person to promote it in a User-Generated Content (UGC) ad.\\n\\nThe final output must ONLY be a description of this person. Do NOT create an ad script, ad concepts, or hooks. Your deliverable is a rich character profile that makes this person feel real, believable, and perfectly suited to be a trusted advocate for the product.\\n\\n**// INPUT //**\\n\\nProduct Name: `{{ $node['form_trigger1'].json['Product Name'] }}`\\n\\n**// REQUIRED OUTPUT STRUCTURE //**\\nPlease generate the persona profile using the following five-part structure. Be as descriptive and specific as possible within each section.\\n\\n**I. Core Identity**\\n* **Name:**\\n* **Age:** (Provide a specific age, not a range)\\n* **Sex/Gender:**\\n* **Location:** (e.g., \\\"A trendy suburb of a major tech city like Austin,\\\" \\\"A small, artsy town in the Pacific Northwest\\\")\\n* **Occupation:** (Be specific. e.g., \\\"Pediatric Nurse,\\\" \\\"Freelance Graphic Designer,\\\" \\\"High School Chemistry Teacher,\\\" \\\"Manages a local coffee shop\\\")\\n\\n**II. Physical Appearance & Personal Style (The \\\"Look\\\")**\\n* **General Appearance:** Describe their face, build, and overall physical presence. What is the first impression they give off?\\n* **Hair:** Color, style, and typical state (e.g., \\\"Effortless, shoulder-length blonde hair, often tied back in a messy bun,\\\" \\\"A sharp, well-maintained short haircut\\\").\\n* **Clothing Aesthetic:** What is their go-to style? Use descriptive labels. (e.g., \\\"Comfort-first athleisure,\\\" \\\"Curated vintage and thrifted pieces,\\\" \\\"Modern minimalist with neutral tones,\\\" \\\"Practical workwear like Carhartt and denim\\\").\\n* **Signature Details:** Are there any small, defining features? (e.g., \\\"Always wears a simple gold necklace,\\\" \\\"Has a friendly sprinkle of freckles across their nose,\\\" \\\"Wears distinctive, thick-rimmed glasses\\\").\\n\\n**III. Personality & Communication (The \\\"Vibe\\\")**\\n* **Key Personality Traits:** List 5-7 core adjectives that define them (e.g., Pragmatic, witty, nurturing, resourceful, slightly introverted, highly observant).\\n* **Demeanor & Energy Level:** How do they carry themselves and interact with the world? (e.g., \\\"Calm and deliberate; they think before they speak,\\\" \\\"High-energy and bubbly, but not in an annoying way,\\\" \\\"Down-to-earth and very approachable\\\").\\n* **Communication Style:** How do they talk? (e.g., \\\"Speaks clearly and concisely, like a trusted expert,\\\" \\\"Tells stories with a dry sense of humor,\\\" \\\"Talks like a close friend giving you honest advice, uses 'you guys' a lot\\\").\\n\\n**IV. Lifestyle & Worldview (The \\\"Context\\\")**\\n* **Hobbies & Interests:** What do they do in their free time? (e.g., \\\"Listens to true-crime podcasts, tends to an impressive collection of houseplants, weekend hiking\\\").\\n* **Values & Priorities:** What is most important to them in life? (e.g., \\\"Values efficiency and finding 'the best way' to do things,\\\" \\\"Prioritizes work-life balance and mental well-being,\\\" \\\"Believes in buying fewer, higher-quality items\\\").\\n* **Daily Frustrations / Pain Points:** What are the small, recurring annoyances in their life? (This should subtly connect to the product's category without mentioning the product itself). (e.g., \\\"Hates feeling disorganized,\\\" \\\"Is always looking for ways to save 10 minutes in their morning routine,\\\" \\\"Gets overwhelmed by clutter\\\").\\n* **Home Environment:** What does their personal space look like? (e.g., \\\"Clean, bright, and organized with IKEA and West Elm furniture,\\\" \\\"Cozy, a bit cluttered, with lots of books and warm lighting\\\").\\n\\n**V. The \\\"Why\\\": Persona Justification**\\n* **Core Credibility:** In one or two sentences, explain the single most important reason why an audience would instantly trust *this specific person's* opinion on this product. (e.g., \\\"As a busy nurse, her recommendation for anything related to convenience and self-care feels earned and authentic,\\\" or \\\"His obsession with product design and efficiency makes him a credible source for any gadget he endorses.\\\")\"\n        },\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"data:image/png;base64,{{ $('convert_product_to_base').item.json.data }}\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "openRouterApiKey",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "796c02ea-66be-484c-a333-be4fffbe17db",
+              "name": "prompt",
+              "value": "={{ $json.choices[0].message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1744,
+        272
+      ],
+      "id": "4fbb872c-d358-41a7-acda-bd99b9aaa617",
+      "name": "set_model_details"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2c2bbb98-c6e4-4339-971a-2d6487f6bd29",
+              "name": "prompt",
+              "value": "=Master Prompt: Raw 12-Second UGC Video Scripts (Enhanced Edition)\nYou are an expert at creating authentic UGC video scripts that look like someone just grabbed their iPhone and hit record—shaky hands, natural movement, zero production value. No text overlays. No polish. Just real.\nYour goal: Create exactly 12-second video scripts with frame-by-frame detail that feel like genuine content someone would post, not manufactured ads.\n\nYou will be provided with an image that includes a reference to the product, but the entire ad should be a UGC-style (User Generated Content) video that gets created and scripted for. The first frame is going to be just the product, but you need to change away and then go into the rest of the video.\n\nThe Raw iPhone Aesthetic\nWhat we WANT:\n\nHandheld shakiness and natural camera movement\nPhone shifting as they talk/gesture with their hands\nCamera readjusting mid-video (zooming in closer, tilting, refocusing)\nOne-handed filming while using product with the other hand\nNatural bobbing/swaying as they move or talk\nFilming wherever they actually are (messy room, car, bathroom mirror, kitchen counter)\nReal lighting (window light, lamp, overhead—not \"good\" lighting)\nAuthentic imperfections (finger briefly covering lens, focus hunting, unexpected background moments)\n\nWhat we AVOID:\n\nTripods or stable surfaces (no locked-down shots)\nText overlays or on-screen graphics (NONE—let the talking do the work)\nPerfect framing that stays consistent\nProfessional transitions or editing\nClean, styled backgrounds\nMultiple takes stitched together feeling\nScripted-sounding delivery or brand speak\n\n\nThe 12-Second Structure (Loose)\n0-2 seconds:\nStart talking/showing immediately—like mid-conversation\nCamera might still be adjusting as they find the angle\nHook them with a relatable moment or immediate product reveal\n2-9 seconds:\nShow the product in action while continuing to talk naturally\nCamera might move closer, pull back, or shift as they demonstrate\nThis is where the main demo/benefit happens organically\n9-12 seconds:\nWrap up thought while product is still visible\nNatural ending—could trail off, quick recommendation, or casual sign-off\nDialogue must finish by the 12-second mark\n\nCritical: NO Invented Details\n\nOnly use the exact Product Name provided\nOnly reference what's visible in the Product Image\nOnly use the Creator Profile details given\nDo not create slogans, brand messaging, or fake details\nStay true to what the product actually does based on the image\n\n\nYour Inputs\nProduct Image: First image in this conversation\nCreator Profile:\n{{ $node['set_model_details'].json.prompt }}\nProduct Name:\n{{ $node['form_trigger1'].json['Product Name'] }}\n\nOutput: 3 Natural Scripts\nThree different authentic approaches:\n\nExcited Discovery - Just found it, have to share\nCasual Recommendation - Talking to camera like a friend\nIn-the-Moment Demo - Showing while using it\n\n\nFormat for each script:\nSCRIPT [#]: [Simple angle in 3-5 words]\nThe energy: [One specific line - excited? Chill? Matter-of-fact? Caffeinated? Half-awake?]\nWhat they say to camera (with timestamps):\n[0:00-0:02] \"[Opening line - 3-5 words, mid-thought energy]\"\n[0:02-0:09] \"[Main talking section - 20-25 words total. Include natural speech patterns like 'like,' 'literally,' 'I don't know,' pauses, self-corrections. Sound conversational, not rehearsed.]\"\n[0:09-0:12] \"[Closing thought - 3-5 words. Must complete by 12-second mark. Can trail off naturally.]\"\nShot-by-Shot Breakdown:\nSECOND 0-1:\n\nCamera position: [Ex: \"Phone held at chest height, slight downward angle, wobbling as they walk\"]\nCamera movement: [Ex: \"Shaky, moving left as they gesture with free hand\"]\nWhat's in frame: [Ex: \"Their face fills 60% of frame, messy bedroom visible behind, lamp in background\"]\nLighting: [Ex: \"Natural window light from right side, creating slight shadow on left cheek\"]\nCreator action: [Ex: \"Walking into frame mid-sentence, looking slightly off-camera then at lens\"]\nProduct visibility: [Ex: \"Product not visible yet / Product visible in left hand, partially out of frame\"]\nAudio cue: [The actual first words being said]\n\nSECOND 1-2:\n\nCamera position: [Ex: \"Still chest height, now more centered as they stop moving\"]\nCamera movement: [Ex: \"Steadying slightly but still has natural hand shake\"]\nWhat's in frame: [Ex: \"Face and shoulders visible, background shows unmade bed\"]\nCreator action: [Ex: \"Reaching off-screen to grab product, eyes following their hand\"]\nProduct visibility: [Ex: \"Product entering frame from bottom right\"]\nAudio cue: [What they're saying during this second]\n\nSECOND 2-3:\n\nCamera position: [Ex: \"Pulling back slightly to waist-level to show more\"]\nCamera movement: [Ex: \"Slight tilt downward, adjusting focus\"]\nWhat's in frame: [Ex: \"Upper body now visible, product held at chest level\"]\nFocus point: [Ex: \"Camera refocusing from face to product\"]\nCreator action: [Ex: \"Holding product up with both hands (phone now propped/gripped awkwardly)\"]\nProduct visibility: [Ex: \"Product front-facing, label clearly visible, natural hand positioning\"]\nAudio cue: [What they're saying]\n\nSECOND 3-4:\n\nCamera position: [Ex: \"Zooming in slightly (digital zoom), frame getting tighter\"]\nCamera movement: [Ex: \"Subtle shake as they demonstrate with one hand\"]\nWhat's in frame: [Ex: \"Product and hands take up 70% of frame, face still partially visible top of frame\"]\nCreator action: [Ex: \"Opening product cap with thumb while talking\"]\nProduct interaction: [Ex: \"Twisting cap, showing interior/applicator\"]\nAudio cue: [What they're saying]\n\nSECOND 4-5:\n\nCamera position: [Ex: \"Shifting angle right as they move product\"]\nCamera movement: [Ex: \"Following their hand movement, losing focus briefly\"]\nWhat's in frame: [Ex: \"Closer shot of product in use, background blurred\"]\nCreator action: [Ex: \"Applying product to face/hand/surface naturally\"]\nProduct interaction: [Ex: \"Dispensing product, showing texture/consistency\"]\nPhysical details: [Ex: \"Product texture visible, their expression reacting to feel/smell\"]\nAudio cue: [What they're saying, might include natural pause or 'um']\n\nSECOND 5-6:\n\nCamera position: [Ex: \"Pulling back to shoulder height\"]\nCamera movement: [Ex: \"Readjusting frame, slight pan left\"]\nWhat's in frame: [Ex: \"Face and product both visible, more balanced composition\"]\nCreator action: [Ex: \"Rubbing product in, looking at camera while demonstrating\"]\nProduct visibility: [Ex: \"Product still in frame on counter/hand, showing before/after\"]\nAudio cue: [What they're saying]\n\nSECOND 6-7:\n\nCamera position: [Ex: \"Stable at eye level (relatively)\"]\nCamera movement: [Ex: \"Natural sway as they shift weight, still handheld\"]\nWhat's in frame: [Ex: \"Mostly face, product visible in periphery\"]\nCreator action: [Ex: \"Touching face/area where product applied, showing result\"]\nBackground activity: [Ex: \"Pet walking by / roommate door visible opening / car passing by window\"]\nAudio cue: [What they're saying]\n\nSECOND 7-8:\n\nCamera position: [Ex: \"Tilting down to show product placement\"]\nCamera movement: [Ex: \"Quick pan down then back up to face\"]\nWhat's in frame: [Ex: \"Product on counter/vanity, their hand reaching for it\"]\nCreator action: [Ex: \"Holding product up one more time, pointing to specific feature\"]\nProduct highlight: [Ex: \"Finger tapping on label/size/specific element\"]\nAudio cue: [What they're saying]\n\nSECOND 8-9:\n\nCamera position: [Ex: \"Back to face level, slightly closer than before\"]\nCamera movement: [Ex: \"Wobbling as they emphasize point with hand gesture\"]\nWhat's in frame: [Ex: \"Face takes up most of frame, product visible bottom right\"]\nCreator action: [Ex: \"Nodding while talking, genuine expression\"]\nProduct visibility: [Ex: \"Product remains in shot naturally, not forced\"]\nAudio cue: [What they're saying, building to conclusion]\n\nSECOND 9-10:\n\nCamera position: [Ex: \"Pulling back to show full setup\"]\nCamera movement: [Ex: \"Slight drop in angle as they relax grip\"]\nWhat's in frame: [Ex: \"Upper body and product together, casual end stance\"]\nCreator action: [Ex: \"Shrugging, smiling, casual body language\"]\nProduct visibility: [Ex: \"Product sitting on counter/still in hand casually\"]\nAudio cue: [Final words beginning]\n\nSECOND 10-11:\n\nCamera position: [Ex: \"Steady-ish at chest height\"]\nCamera movement: [Ex: \"Minimal movement, winding down\"]\nWhat's in frame: [Ex: \"Face and product both clearly visible, relaxed framing\"]\nCreator action: [Ex: \"Looking at product then back at camera, finishing thought\"]\nProduct visibility: [Ex: \"Last clear view of product and packaging\"]\nAudio cue: [Final words]\n\nSECOND 11-12:\n\nCamera position: [Ex: \"Same level, might drift slightly\"]\nCamera movement: [Ex: \"Natural settling, possibly starting to lower phone\"]\nWhat's in frame: [Ex: \"Face, partial product view, casual ending\"]\nCreator action: [Ex: \"Small wave / half-smile / looking away naturally\"]\nHow it ends: [Ex: \"Cuts off mid-movement\" / \"Fade as they lower phone\" / \"Abrupt stop\"]\nFinal audio: [Last word/sound trails off naturally]\n\nOverall Technical Details:\n\nPhone orientation: [Vertical/horizontal?]\nFilming method: [Selfie mode facing them? Back camera in mirror? Someone else holding phone? Propped on stack of books?]\nDominant hand: [Which hand holds phone vs. product?]\nLocation specifics: [What room? Time of day based on lighting? Any notable background elements?]\nAudio environment: [Echo from bathroom? Quiet bedroom? Background TV/music? Street noise?]\n\n\nEnhanced Authenticity Guidelines\nVerbal Authenticity:\n\nUse filler words: \"like,\" \"literally,\" \"so,\" \"I mean,\" \"honestly\"\nInclude natural pauses: \"It's just... really good\"\nSelf-corrections: \"It's really—well actually it's more like...\"\nConversational fragments: \"Yeah so this thing...\"\nRegional speech patterns if relevant to creator profile\n\nVisual Authenticity Markers:\n\nFinger briefly covering part of lens\nCamera focus hunting between face and product\nSlight overexposure from window light\nBackground \"real life\" moments (pet, person, notification pop-up)\nNatural product handling (not perfect grip, repositioning)\n\nTiming Authenticity:\n\nSlight rushing at the end to fit in last thought\nNatural breath pauses\nTalking speed varies (faster when excited, slower when showing detail)\nMight start sentence at 11 seconds that gets cut at 12\n\n\nRemember: Every second matters. The more specific the shot breakdown, the more authentic the final video feels. If a detail seems too polished, make it messier. No text overlays ever. All dialogue must finish by the 12-second mark (can trail off naturally).",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        496
+      ],
+      "id": "3ed7837a-6414-4ca6-a1a8-388af12d09d9",
+      "name": "set_build_video_prompts"
+    },
+    {
+      "id": "a3c8e771-b9a0-497f-be7d-7cc69a8cf424",
+      "name": "extract_prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        496
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const content = $input.first().json.choices[0].message.content;\nlet scripts = [];\ntry {\n  const clean = content.replace(/```json\\n?|\\n?```/g, '').trim();\n  const parsed = JSON.parse(clean);\n  if (parsed.scripts && Array.isArray(parsed.scripts)) {\n    scripts = parsed.scripts;\n  }\n} catch(e) {\n  const parts = content.split(/\\n(?:Video\\s+)?Script\\s+[#]?\\d+/i).filter(s => s.trim().length > 100);\n  scripts = parts.slice(0, 3);\n}\nif (scripts.length === 0) {\n  const chunks = content.split(/\\n\\n+/).filter(s => s.trim().length > 80);\n  scripts = chunks.slice(0, 3);\n}\nreturn scripts.slice(0, 3).map(s => ({json: {prompt: s.trim()}}));\n"
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"Extracted Prompts\",\n  \"description\": \"A schema designed to hold a list of individual prompts that have been extracted from a larger body of text. Use this to format the extracted prompts.\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"prompts\": {\n      \"type\": \"array\",\n      \"description\": \"An array where each element is a single, distinct prompt string that was extracted from the user's input.\",\n      \"items\": {\n        \"type\": \"string\",\n        \"description\": \"A single prompt statement.\"\n      }\n    }\n  },\n  \"required\": [\n    \"prompts\"\n  ]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        720
+      ],
+      "id": "09ee532d-09d9-42b7-840e-baea8b3d0298",
+      "name": "prompts-parser",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.prompts",
+        "options": {
+          "destinationFieldName": "prompt"
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        496
+      ],
+      "id": "0daf2486-3782-4242-8b60-f8605f18cbfc",
+      "name": "split_prompts"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        672,
+        720
+      ],
+      "id": "7cf0c2c6-dedf-4672-a254-9db58cf43fd3",
+      "name": "iterate_prompts"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://fal.run/fal-ai/flux/dev/image-to-image",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"image_url\": \"data:image/png;base64,{{ $('convert_product_to_base').item.json.data }}\",\n  \"prompt\": \"Hyper-realistic UGC-style selfie photo. {{ $node['set_model_details'].json.prompt.substring(0,300) }} The person is naturally holding and using the product. Shot on iPhone, handheld, slightly unstable, natural window light, real indoor background. Person looks at camera mid-speech. Portrait 9:16.\",\n  \"strength\": 0.78,\n  \"num_images\": 1,\n  \"image_size\": \"portrait_4_3\",\n  \"num_inference_steps\": 28,\n  \"guidance_scale\": 3.5\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        816,
+        864
+      ],
+      "id": "f44d88bc-6e69-46d8-b03f-329887192fbf",
+      "name": "generate_frame",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "falApiKey",
+          "name": "falApiKey"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "524da01b-f8b9-4c2c-9e28-319455903e4d",
+              "name": "=result",
+              "value": "={{ $json.images[0].url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        864
+      ],
+      "id": "ebceb22d-5220-4e66-a391-5275cd027cfa",
+      "name": "set_frame_result"
+    },
+    {
+      "id": "ee1b0e72-ad12-424b-87c2-f9187586f09a",
+      "name": "get_frame_image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        864
+      ],
+      "parameters": {
+        "url": "={{ $json.result }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "width": 720,
+        "height": 1280,
+        "resizeOption": "ignoreAspectRatio",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        864
+      ],
+      "id": "4c5a787d-d7ae-4d60-bd4f-0eb559d47774",
+      "name": "resize_image"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        656
+      ],
+      "id": "1f68c258-238a-4e6b-a806-41a024106e21",
+      "name": "gemini-2.5-pro",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"google/gemini-2.5-pro\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": {{ JSON.stringify($json.prompt + \"\\n\\nCRITICAL: Return ONLY a raw JSON object, no markdown, no explanation. Format: {\\\"scripts\\\": [\\\"FULL SCRIPT 1\\\", \\\"FULL SCRIPT 2\\\", \\\"FULL SCRIPT 3\\\"]}\") }}\n        },\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"data:image/png;base64,{{ $('convert_product_to_base').item.json.data }}\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        928,
+        496
+      ],
+      "id": "c1794f58-8281-46b4-bcc9-daaddbabf17e",
+      "name": "generate_ad_prompts",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "openRouterKey",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Sora 2 UGC E-Ticaret Video Üreticisi\n\n1. İş akışını başlatmak için basit bir ürün fotoğrafı ve ürün adını yükleyerek tetikleyin.  \n2. OpenAI’nin görsel API’si, görseli analiz eder ve bu e-ticaret ürününü tanıtacak ideal influencer için bir profil oluşturur.  \n3. Ardından sistem, Gemini 2.5 Pro’yu kullanarak ürün fotoğrafı ve influencer profilinden yararlanıp birden fazla farklı UGC reklam senaryosu yazar.  \n4. Her bir senaryo oluşturulduktan sonra sistem, bunları tek tek ayırarak Sora 2’nin API’si üzerinden sırayla UGC reklam videolarını üretmeye başlar.  \n",
+        "height": 1584,
+        "width": 1584,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        576,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "16bb49b4-79e1-4b1d-b04b-1bbb65679366",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Genel Bakış ve Kurulum\n\nBu n8n şablonu, e-ticaret ürünleri için yapay zeka kullanarak otomatik olarak özgün Kullanıcı Tarafından Üretilen İçerik (UGC) tarzında pazarlama videoları oluşturmayı gösterir. Sadece bir ürün görseli yüklemeniz yeterlidir; iş akışı, senaryolar, karakterler ve video üretimi dahil olmak üzere birden fazla gerçekçi influencer tarzı video reklam oluşturur.\n\n## Kullanım Alanları\n* A/B testleri için birden fazla UGC video varyasyonu oluşturma  \n* Sosyal medya için özgün görünümlü ürün tanıtım videoları hazırlama  \n* İçerik üreticisi kiralamadan influencer tarzı içerikler üretme  \n* Yeni ürünler için farklı pazarlama açılarını hızlıca test etme  \n* E-ticaret kataloğu için video içerik üretimini ölçeklendirme  \n\n## Bilinmesi Gerekenler\n* Sora 2 video üretimi, 12 saniyelik bir video için yaklaşık 2-3 dakika sürer  \n* Her video üretimi yaklaşık 0,50–1,00 USD maliyetindedir (güncel fiyatlar için OpenAI ücretlendirmesini kontrol edin)  \n* İş akışı, tek bir ürün görselinden birden fazla video varyasyonu üretir  \n* Videolar tamamlandıktan sonra otomatik olarak Google Drive’a yüklenir  \n* Üretilen videolar sosyal medya için optimize edilmiş 720x1280 (9:16) formatındadır  \n\n## Nasıl Çalışır\n1. **Ürün Analizi**: OpenAI’nin görsel API’si, yüklenen ürün görselini analiz ederek özelliklerini, faydalarını ve hedef kitlesini anlar  \n2. **Persona Oluşturma**: Sistem, bu ürünü özgün şekilde tanıtacak ideal influencer/yaratıcı profiline dair ayrıntılı bir karakter oluşturur  \n3. **Senaryo Üretimi**: Gemini 2.5 Pro, her biri 12 saniyelik olacak şekilde, doğal diyaloglar ve kamera hareketleriyle kare-kare açıklamalı özgün UGC video senaryoları üretir  \n4. **Kare Üretimi**: Her senaryo için Gemini, ürün görselini UGC estetiği ve en-boy oranına uygun şekilde uyarlayan özel bir ilk kare oluşturur  \n5. **Video Üretimi**: Sora 2 API, senaryo ve özel ilk kareyi referans alarak videoyu üretir  \n6. **Durum Takibi**: İş akışı, video üretim durumunu tamamlanana kadar her 15 saniyede bir kontrol eder  \n7. **Yükleme ve Depolama**: Tamamlanan videolar, düzenli adlandırmayla Google Drive’a otomatik olarak yüklenir  \n\n## Nasıl Kullanılır\n1. Form tetikleyici bağlantısına tıklayarak gönderim formuna erişin  \n2. Ürün görselinizi yükleyin (beyaz veya nötr arka planlı temiz görseller en iyi sonucu verir)  \n3. Ürün adını girin  \n4. Formu gönderin ve iş akışının tamamlanmasını bekleyin  \n5. Oluşturulan UGC videolarınızı belirtilen Google Drive klasöründe bulun  \n6. Her çalıştırmada test edebileceğiniz birden fazla video varyasyonu üretilir  \n\n## Gereksinimler\n* Video üretimi ve GPT-4 Vision için **Sora 2 erişimi olan bir Prototipal** hesabı  \n* Senaryo üretimi ve görsel uyarlama için **Google Gemini API** hesabı  \n* Video depolama için **Google Drive** hesabı  \n* Video üretimi için yeterli API kredisi (bütçenizi buna göre planlayın)  \n\n## Bu İş Akışını Özelleştirme\n* **generate_video** düğümündeki **video süresini** (şu anda 12 saniye) ayarlayın  \n* **analyze_product** düğümündeki **persona prompt’unu** değiştirerek farklı demografik hedef kitleleri seçin  \n* **set_build_video_prompts** düğümündeki **senaryo tarzını** değiştirerek farklı UGC estetikleri (heyecanlı keşif, rahat öneri vb.) oluşturun  \n* **upload_video** düğümündeki **Google Drive klasörünü** değiştirerek videoları kampanyaya göre organize edin  \n* Video düzenleme, altyazı üretimi veya küçük resim oluşturma için **ek işlem düğümleri** ekleyin  \n* **resize_image** düğümündeki **en-boy oranını** farklı platformlara göre değiştirin (Instagram akışı için 1:1, YouTube için 16:9 vb.)  \n",
+        "height": 1584,
+        "width": 560
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "e5e51b54-7612-47c1-bda7-79f174c3d465",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/kling-video/v2/master/image-to-video",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"image_url\": \"{{ $node['set_frame_result'].json.result }}\",\n  \"prompt\": {{ JSON.stringify($node['iterate_prompts'].json.prompt) }},\n  \"duration\": \"5\",\n  \"aspect_ratio\": \"9:16\",\n  \"negative_prompt\": \"blurry, low quality, distorted, unnatural, studio, professional photography\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        1136
+      ],
+      "id": "43b526ee-d844-4a3b-b0f2-d2fcdda2833d",
+      "name": "generate_video1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "falApiKey",
+          "name": "falApiKey"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "062fd0b1-2a5f-440a-8791-424117cc7467",
+              "name": "productName",
+              "value": "={{ $json['Product Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "82746b29-93f8-4fb4-b604-277e442fc18d",
+              "name": "productImageUrl",
+              "value": "={{ $json['Product Image URL'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "extract_webhook_data",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        912,
+        272
+      ],
+      "typeVersion": 3.4,
+      "id": "9ceb68df-bef9-49c0-8239-7243c459489a"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.productImageUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "name": "download_product_image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1072,
+        272
+      ],
+      "typeVersion": 4.2,
+      "id": "a120b299-a3e5-4028-8c16-d556502989d8"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "name": "convert_product_to_base",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1248,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "f6d69a61-1f5f-4468-bd0f-1b38d05951fb"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data",
+        "options": {}
+      },
+      "name": "convert_product_to_image1",
+      "type": "n8n-nodes-base.convertToFile",
+      "position": [
+        1408,
+        272
+      ],
+      "typeVersion": 1.1,
+      "id": "8c0f421d-632f-4e30-8620-1a2f75ebec30"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fal-model-id",
+              "name": "model_endpoint",
+              "value": "fal-ai/kling-video/v2/master/image-to-video",
+              "type": "string"
+            },
+            {
+              "id": "fal-prompt",
+              "name": "prompt",
+              "value": "=={{ $node['iterate_prompts'].json.prompt }}",
+              "type": "string"
+            },
+            {
+              "id": "fal-image",
+              "name": "image_data",
+              "value": "=={{ $binary.data.data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1936,
+        864
+      ],
+      "id": "a8267ed5-3ebf-4046-bb65-5b7606756d3c",
+      "name": "prepare_video_request"
+    },
+    {
+      "parameters": {
+        "formTitle": "eCommerce Product Video Generator",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Product Image URL",
+              "placeholder": "Product Image URL",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Product Name",
+              "placeholder": "Product Name",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        272
+      ],
+      "id": "6cd84d27-9217-4e45-9da8-844c1e352a3c",
+      "name": "form_trigger1",
+      "webhookId": "20c64073-74b3-4eef-8d41-fb016c2b1cd5"
+    },
+    {
+      "parameters": {
+        "url": "=https://queue.fal.run/fal-ai/kling-video/v2/master/image-to-video/requests/{{ $('generate_video1').item.json.request_id }}/status",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1168,
+        1120
+      ],
+      "id": "d7fdab92-3848-4cfe-ae7b-d38eb073ce07",
+      "name": "get_video_status1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "falApiKey",
+          "name": "falApiKey"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://queue.fal.run/fal-ai/kling-video/v2/master/image-to-video/requests/{{ $('generate_video1').item.json.request_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1584,
+        1088
+      ],
+      "id": "42f23eac-b2cb-46be-8648-5a1ed1f9bc02",
+      "name": "get_video1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "falApiKey",
+          "name": "falApiKey"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6ce95513-f1dd-4105-ab55-de5d073cb0c3",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "COMPLETED",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1408,
+        1088
+      ],
+      "id": "20a3d5bf-63d1-4eee-8fe6-3b36597b6302",
+      "name": "check_status1"
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        1120
+      ],
+      "id": "7036b252-0233-44eb-a621-f1933756f5a3",
+      "name": "delay1",
+      "webhookId": "f0f42fd8-7592-48bb-9f66-efbeafc91122"
+    },
+    {
+      "parameters": {
+        "name": "=UGC_{{ $node['form_trigger1'].json['Product Name'] }}_{{ $now.format('yyyy-MM-dd_HHmmss') }}.mp4",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1984,
+        1104
+      ],
+      "id": "a9ba2e7f-bff4-4f01-b7e2-317ef6ec05cd",
+      "name": "upload_video1",
+      "credentials": {
+        "googleApi": {
+          "id": "googleServiceAccount",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gateway-api.prototipal.com/api/generations/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $node['iterate_prompts'].json.prompt }}"
+            },
+            {
+              "name": "model",
+              "value": "openai"
+            },
+            {
+              "name": "model_version",
+              "value": "sora-2"
+            },
+            {
+              "name": "seconds",
+              "value": "12"
+            },
+            {
+              "name": "size",
+              "value": "portrait"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "input_reference",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        608,
+        1296
+      ],
+      "id": "a90e34d8-86bf-49a5-9fab-352ceed99240",
+      "name": "generate_video",
+      "disabled": true
+    },
+    {
+      "id": "fetch-video-binary-001",
+      "name": "fetch_video_binary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1784,
+        1104
+      ],
+      "parameters": {
+        "url": "={{ $json.video.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "analyze_product": {
+      "main": [
+        [
+          {
+            "node": "set_model_details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_model_details": {
+      "main": [
+        [
+          {
+            "node": "set_build_video_prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_build_video_prompts": {
+      "main": [
+        [
+          {
+            "node": "generate_ad_prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract_prompts": {
+      "main": [
+        [
+          {
+            "node": "split_prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split_prompts": {
+      "main": [
+        [
+          {
+            "node": "iterate_prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "iterate_prompts": {
+      "main": [
+        [],
+        [
+          {
+            "node": "generate_frame",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_frame": {
+      "main": [
+        [
+          {
+            "node": "set_frame_result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_frame_result": {
+      "main": [
+        [
+          {
+            "node": "get_frame_image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_frame_image": {
+      "main": [
+        [
+          {
+            "node": "resize_image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "resize_image": {
+      "main": [
+        [
+          {
+            "node": "prepare_video_request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_ad_prompts": {
+      "main": [
+        [
+          {
+            "node": "extract_prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_video1": {
+      "main": [
+        [
+          {
+            "node": "delay1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract_webhook_data": {
+      "main": [
+        [
+          {
+            "node": "download_product_image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "download_product_image": {
+      "main": [
+        [
+          {
+            "node": "convert_product_to_base",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "convert_product_to_base": {
+      "main": [
+        [
+          {
+            "node": "convert_product_to_image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "convert_product_to_image1": {
+      "main": [
+        [
+          {
+            "node": "analyze_product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare_video_request": {
+      "main": [
+        [
+          {
+            "node": "generate_video1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "form_trigger1": {
+      "main": [
+        [
+          {
+            "node": "extract_webhook_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_video_status1": {
+      "main": [
+        [
+          {
+            "node": "check_status1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_video1": {
+      "main": [
+        [
+          {
+            "node": "fetch_video_binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_status1": {
+      "main": [
+        [
+          {
+            "node": "get_video1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "delay1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delay1": {
+      "main": [
+        [
+          {
+            "node": "get_video_status1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upload_video1": {
+      "main": [
+        [
+          {
+            "node": "iterate_prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_video": {
+      "main": [
+        [
+          {
+            "node": "delay1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch_video_binary": {
+      "main": [
+        [
+          {
+            "node": "upload_video1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4a5c2357-a102-4798-a80c-feae1521f6ca",
+  "meta": {
+    "instanceId": "fd396054ede2927cd0fe445285c6b42ba42a625f816014a2a1e4c66ec0ab5c5a"
+  },
+  "id": "2Eojy0m62ZR4ABRa",
+  "tags": []
+}
