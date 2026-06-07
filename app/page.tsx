@@ -50,12 +50,14 @@ export default function Home() {
 
   /** Bir fal isini COMPLETED olana kadar poll eder; medya URL dondurur. */
   async function pollUntilDone(
-    id: string,
+    statusUrl: string,
+    responseUrl: string,
     kind: "image" | "video"
   ): Promise<string> {
     const maxTries = kind === "video" ? 150 : 60; // video ~10dk, kare ~4dk
     for (let i = 0; i < maxTries; i++) {
-      const res = await fetch(`/api/status?id=${id}&kind=${kind}`);
+      const qs = new URLSearchParams({ statusUrl, responseUrl });
+      const res = await fetch(`/api/status?${qs.toString()}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Durum sorgusu basarisiz.");
       if (data.status === "COMPLETED") {
@@ -136,19 +138,33 @@ export default function Home() {
         const stepKey = `video-${i + 1}`;
         const script = selected[i];
 
-        setStep(stepKey, "active", "kare uretiliyor (flux)");
-        const frame = await postJson<{ requestId: string }>("/api/frame", {
+        setStep(stepKey, "active", "kare uretiliyor (Flux 1.1 Pro)");
+        const frame = await postJson<{
+          statusUrl: string;
+          responseUrl: string;
+        }>("/api/frame", {
           persona,
           imageUrl,
         });
-        const frameUrl = await pollUntilDone(frame.requestId, "image");
+        const frameUrl = await pollUntilDone(
+          frame.statusUrl,
+          frame.responseUrl,
+          "image"
+        );
 
-        setStep(stepKey, "active", "video uretiliyor (kling)");
-        const vid = await postJson<{ requestId: string }>("/api/video", {
+        setStep(stepKey, "active", "video uretiliyor (Seedance 2.0)");
+        const vid = await postJson<{
+          statusUrl: string;
+          responseUrl: string;
+        }>("/api/video", {
           imageUrl: frameUrl,
           prompt: script,
         });
-        const videoUrl = await pollUntilDone(vid.requestId, "video");
+        const videoUrl = await pollUntilDone(
+          vid.statusUrl,
+          vid.responseUrl,
+          "video"
+        );
 
         setStep(stepKey, "active", "Drive'a yukleniyor");
         const fin = await postJson<{
@@ -198,8 +214,8 @@ export default function Home() {
         <h1>🎬 UGC Otomasyon</h1>
         <p>
           Urun fotografi + adi girin; sistem persona olusturur, 3 UGC senaryosu
-          yazar, her biri icin kare (flux) ve video (Kling) uretir, Google
-          Drive'a yukler ve e-posta ile bildirir.
+          yazar, her biri icin kare (Flux 1.1 Pro) ve sesli video (Seedance 2.0)
+          uretir, Google Drive'a yukler ve e-posta ile bildirir.
         </p>
       </div>
 

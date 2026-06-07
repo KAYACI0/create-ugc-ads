@@ -1,10 +1,11 @@
 /**
- * OpenRouter cagrilari (vision).
- *   - generatePersona : google/gemini-2.0-flash-001  -> persona profili
- *   - generateScripts : google/gemini-2.5-pro        -> 3 UGC senaryosu (JSON)
+ * Google AI Studio (Gemini API) cagrilari — ucretsiz katman.
+ *   - generatePersona : gemini-2.5-flash -> persona profili
+ *   - generateScripts : gemini-2.5-pro   -> 3 UGC senaryosu (JSON)
  *
- * Urun gorseli, OpenRouter'a public bir URL olarak image_url ile gonderilir
- * (workflow base64 kullaniyordu; URL de ayni sekilde desteklenir ve daha hafiftir).
+ * OpenRouter URL ile gorsel gonderebiliyordu; Gemini API ise gorseli
+ * inline base64 (inline_data) olarak ister. Bu yuzden urun gorselini
+ * (fal storage public URL'si) once indirip base64'e ceviriyoruz.
  */
 import {
   PERSONA_MODEL,
@@ -13,55 +14,75 @@ import {
   buildScriptsPrompt,
 } from "./prompts";
 
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const GEMINI_BASE =
+  "https://generativelanguage.googleapis.com/v1beta/models";
 
-function headers() {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error("OPENROUTER_API_KEY tanimli degil.");
-  return {
-    Authorization: `Bearer ${apiKey}`,
-    "Content-Type": "application/json",
-    "HTTP-Referer": process.env.APP_URL || "http://localhost:3000",
-    "X-Title": "UGC Otomasyon",
-  };
+function apiKey(): string {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new Error("GEMINI_API_KEY tanimli degil.");
+  return key;
 }
 
-/** Vision destekli tek mesajli chat completion; metni dondurur. */
+/** Gorseli indirip base64 + mime tipi olarak dondurur (Gemini inline_data icin). */
+async function fetchImageInline(
+  imageUrl: string
+): Promise<{ mimeType: string; data: string }> {
+  const res = await fetch(imageUrl);
+  if (!res.ok) {
+    throw new Error(`Urun gorseli indirilemedi (${res.status}).`);
+  }
+  const mimeType = res.headers.get("content-type") || "image/jpeg";
+  const buf = Buffer.from(await res.arrayBuffer());
+  return { mimeType, data: buf.toString("base64") };
+}
+
+/** Vision destekli tek mesajli generateContent; metni dondurur. */
 async function visionCompletion(
   model: string,
   text: string,
   imageUrl: string,
   opts?: { jsonMode?: boolean; maxTokens?: number }
 ): Promise<string> {
+  const image = await fetchImageInline(imageUrl);
+
   const body: Record<string, unknown> = {
-    model,
-    // max_tokens olmadan OpenRouter modelin tum tavanini pesin rezerve eder;
-    // bu free-tier'da kredi yetersizligine yol acar.
-    max_tokens: opts?.maxTokens ?? 2048,
-    messages: [
+    contents: [
       {
         role: "user",
-        content: [
-          { type: "text", text },
-          { type: "image_url", image_url: { url: imageUrl } },
+        parts: [
+          { text },
+          { inline_data: { mime_type: image.mimeType, data: image.data } },
         ],
       },
     ],
+    generationConfig: {
+      maxOutputTokens: opts?.maxTokens ?? 2048,
+      ...(opts?.jsonMode ? { responseMimeType: "application/json" } : {}),
+    },
   };
-  if (opts?.jsonMode) body.response_format = { type: "json_object" };
 
-  const res = await fetch(OPENROUTER_URL, {
+  const res = await fetch(`${GEMINI_BASE}/${model}:generateContent`, {
     method: "POST",
-    headers: headers(),
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey(),
+    },
     body: JSON.stringify(body),
   });
 
   if (!res.ok) {
     const t = await res.text();
-    throw new Error(`OpenRouter hatasi (${res.status}): ${t}`);
+    throw new Error(`Gemini API hatasi (${res.status}): ${t}`);
   }
+
   const json = await res.json();
-  return (json?.choices?.[0]?.message?.content ?? "").toString();
+  const parts = json?.candidates?.[0]?.content?.parts as
+    | Array<{ text?: string }>
+    | undefined;
+  return (parts ?? [])
+    .map((p) => p?.text ?? "")
+    .join("")
+    .toString();
 }
 
 /** 1) Persona profili uretir. */
@@ -137,7 +158,6 @@ function parseScripts(content: string): string[] {
  * gemini bazen string yerine ic ice nesne dondurur
  * (or. {script_1: {title, energy, dialogue:{part_1..}, shots:{...}}}).
  * Tum string yaprak degerlerini, sirayi koruyarak toplayip birlestirir.
- * Boylece Kling'e gidecek prompt hem okunabilir hem de JSON kalabaligi olmadan olur.
  */
 function normalizeScript(s: unknown): string {
   if (typeof s === "string") return s.trim();

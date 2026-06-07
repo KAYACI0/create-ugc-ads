@@ -1,7 +1,7 @@
 /**
  * POST /api/frame  { persona, imageUrl }
- * flux i2i ile UGC selfie ilk-karesini uretir (queue submit).
- * Donus: { requestId }
+ * Flux 1.1 Pro Redux ile UGC selfie ilk-karesini uretir (queue submit).
+ * Donus: { requestId, statusUrl, responseUrl }
  */
 import { NextRequest, NextResponse } from "next/server";
 import { submitFrame } from "@/lib/fal";
@@ -22,8 +22,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    const requestId = await submitFrame(buildFramePrompt(persona || ""), imageUrl);
-    return NextResponse.json({ requestId });
+    const job = await submitFrame(buildFramePrompt(persona || ""), imageUrl);
+    return NextResponse.json(job);
   } catch (err) {
     console.error("[/api/frame]", err);
     return NextResponse.json(

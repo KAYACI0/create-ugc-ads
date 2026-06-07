@@ -1,10 +1,12 @@
 /**
- * GET /api/status?id=<requestId>&kind=image|video
- * Ilgili fal isinin durumunu sorgular; COMPLETED ise medya URL'sini dondurur.
+ * GET /api/status?statusUrl=<...>&responseUrl=<...>
+ * submit yanitindan gelen fal status_url/response_url ile isin durumunu sorgular;
+ * COMPLETED ise medya URL'sini dondurur. (URL'ler sunucuda fal.run host'una karsi
+ * dogrulanir — SSRF korumasi.)
  * Donus: { status, url? }
  */
 import { NextRequest, NextResponse } from "next/server";
-import { checkStatus, FLUX_ENDPOINT, KLING_ENDPOINT } from "@/lib/fal";
+import { checkStatusByUrl } from "@/lib/fal";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -12,22 +14,17 @@ export const maxDuration = 30;
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-    const kind = searchParams.get("kind");
+    const statusUrl = searchParams.get("statusUrl");
+    const responseUrl = searchParams.get("responseUrl");
 
-    if (!id) {
-      return NextResponse.json({ error: "id zorunludur." }, { status: 400 });
-    }
-    if (kind !== "image" && kind !== "video") {
+    if (!statusUrl || !responseUrl) {
       return NextResponse.json(
-        { error: "kind 'image' veya 'video' olmali." },
+        { error: "statusUrl ve responseUrl zorunludur." },
         { status: 400 }
       );
     }
 
-    const endpoint = kind === "image" ? FLUX_ENDPOINT : KLING_ENDPOINT;
-    const result = await checkStatus(endpoint, id);
-
+    const result = await checkStatusByUrl(statusUrl, responseUrl);
     return NextResponse.json(result);
   } catch (err) {
     console.error("[/api/status]", err);

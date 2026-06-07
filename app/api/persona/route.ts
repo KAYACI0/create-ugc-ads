@@ -1,11 +1,11 @@
 /**
  * POST /api/persona  { productName, imageUrl }
  * Urun gorselinden ideal UGC yaraticisi profili uretir
- * (OpenRouter google/gemini-2.0-flash-001, vision).
+ * (Google AI Studio gemini-2.5-flash, vision).
  * Donus: { persona }
  */
 import { NextRequest, NextResponse } from "next/server";
-import { generatePersona } from "@/lib/openrouter";
+import { generatePersona } from "@/lib/gemini";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;

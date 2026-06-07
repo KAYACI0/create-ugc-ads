@@ -1,11 +1,11 @@
 /**
  * POST /api/scripts  { persona, productName, imageUrl }
  * persona + urun + gorselden 3 adet 12sn UGC senaryosu uretir
- * (OpenRouter google/gemini-2.5-pro, vision, JSON cikti).
+ * (Google AI Studio gemini-2.5-pro, vision, JSON cikti).
  * Donus: { scripts: string[] }
  */
 import { NextRequest, NextResponse } from "next/server";
-import { generateScripts } from "@/lib/openrouter";
+import { generateScripts } from "@/lib/gemini";
 
 export const runtime = "nodejs";
 // Vercel Hobby plani fonksiyon basina en fazla 60 sn'ye izin verir.

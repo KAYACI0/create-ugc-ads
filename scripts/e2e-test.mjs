@@ -21,10 +21,11 @@ async function post(path, body) {
   return data;
 }
 
-async function poll(id, kind) {
+async function poll(statusUrl, responseUrl, kind) {
   const max = kind === "video" ? 150 : 60;
   for (let i = 0; i < max; i++) {
-    const res = await fetch(`${BASE}/api/status?id=${id}&kind=${kind}`);
+    const qs = new URLSearchParams({ statusUrl, responseUrl });
+    const res = await fetch(`${BASE}/api/status?${qs.toString()}`);
     const d = await res.json();
     process.stdout.write(`\r   [${kind}] ${d.status} (${i * 4}s)        `);
     if (d.status === "COMPLETED") {
@@ -48,14 +49,14 @@ async function poll(id, kind) {
   console.log("   OK -> " + scripts.length + " senaryo");
   console.log("   Senaryo 1 ilk 200 char: " + scripts[0].slice(0, 200).replace(/\n/g, " "));
 
-  console.log("3) FRAME (flux i2i)...");
+  console.log("3) FRAME (Flux 1.1 Pro Redux)...");
   const frame = await post("/api/frame", { persona, imageUrl: IMG });
-  const frameUrl = await poll(frame.requestId, "image");
+  const frameUrl = await poll(frame.statusUrl, frame.responseUrl, "image");
   console.log("   frameUrl: " + frameUrl);
 
-  console.log("4) VIDEO (kling i2v)...");
+  console.log("4) VIDEO (Seedance 2.0 i2v)...");
   const vid = await post("/api/video", { imageUrl: frameUrl, prompt: scripts[0] });
-  const videoUrl = await poll(vid.requestId, "video");
+  const videoUrl = await poll(vid.statusUrl, vid.responseUrl, "video");
   console.log("   videoUrl: " + videoUrl);
 
   console.log(`\nTAMAM. Toplam ${Math.round((Date.now() - t0) / 1000)}s`);

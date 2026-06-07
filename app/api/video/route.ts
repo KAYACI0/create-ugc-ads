@@ -1,9 +1,9 @@
 /**
  * POST /api/video  { imageUrl, prompt }
- * flux kare ciktisini kling i2v ile videoya cevirir (queue submit).
- *   - imageUrl: flux kare URL'si
+ * Flux kare ciktisini Seedance 2.0 i2v ile (sesli) videoya cevirir (queue submit).
+ *   - imageUrl: Flux kare URL'si
  *   - prompt  : ilgili UGC senaryosu
- * Donus: { requestId }
+ * Donus: { requestId, statusUrl, responseUrl }
  */
 import { NextRequest, NextResponse } from "next/server";
 import { submitVideo } from "@/lib/fal";
@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    const requestId = await submitVideo(prompt, imageUrl);
-    return NextResponse.json({ requestId });
+    const job = await submitVideo(prompt, imageUrl);
+    return NextResponse.json(job);
   } catch (err) {
     console.error("[/api/video]", err);
     return NextResponse.json(

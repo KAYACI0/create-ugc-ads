@@ -1,12 +1,14 @@
 /**
- * fal.ai istemci sarmalayicisi (workflow ile ayni modeller/parametreler).
- *   - Kare  : fal-ai/flux/dev/image-to-image          (strength 0.78, portrait_4_3)
- *   - Video : fal-ai/kling-video/v2/master/image-to-video (5sn, 9:16)
+ * fal.ai istemci sarmalayicisi.
+ *   - Kare  : fal-ai/flux-pro/v1.1/redux            (Flux 1.1 Pro, image-to-image)
+ *   - Video : bytedance/seedance-2.0/image-to-video (Seedance 2.0, sesli, 9:16)
  *
- * Vercel uyumu icin queue API: submit -> request_id, sonra polling.
+ * Vercel uyumu icin queue API: submit -> request_id + status_url/response_url,
+ * sonra tarayicidan polling. status_url/response_url'yi submit yanitindan
+ * dogrudan tasiyoruz; boylece farkli model namespace'lerinde (fal-ai/... vs
+ * bytedance/...) "base app" tahmini yapmak gerekmez.
  */
 import { fal } from "@fal-ai/client";
-import { VIDEO_NEGATIVE_PROMPT } from "./prompts";
 
 const FAL_KEY = process.env.FAL_KEY;
 if (!FAL_KEY) {
@@ -16,53 +18,68 @@ fal.config({ credentials: FAL_KEY });
 
 // Not: tip kasitli olarak `string` -> @fal-ai/client InputType<string> = Record<string, any>
 // boylece image_size / aspect_ratio gibi alanlar tip hatasi vermez.
-export const FLUX_ENDPOINT: string = "fal-ai/flux/dev/image-to-image";
-export const KLING_ENDPOINT: string =
-  "fal-ai/kling-video/v2/master/image-to-video";
+export const FLUX_ENDPOINT: string = "fal-ai/flux-pro/v1.1/redux";
+export const SEEDANCE_ENDPOINT: string =
+  "bytedance/seedance-2.0/image-to-video";
+
+/** Bir fal kuyruk isini takip etmek icin gereken referanslar. */
+export interface FalJobRef {
+  requestId: string;
+  statusUrl: string;
+  responseUrl: string;
+}
 
 /** Bir dosyayi fal storage'a yukler, public URL dondurur. */
 export async function uploadToFal(file: File | Blob): Promise<string> {
   return fal.storage.upload(file);
 }
 
-/** flux i2i kare uretimini queue'ya gonderir (workflow generate_frame ayarlari). */
+/** Flux 1.1 Pro Redux ile UGC kare uretimini queue'ya gonderir. */
 export async function submitFrame(
   prompt: string,
   imageUrl: string
-): Promise<string> {
-  const { request_id } = await fal.queue.submit(FLUX_ENDPOINT, {
+): Promise<FalJobRef> {
+  const sub = await fal.queue.submit(FLUX_ENDPOINT, {
     input: {
       image_url: imageUrl,
       prompt,
-      strength: 0.78,
-      num_images: 1,
       image_size: "portrait_4_3",
+      num_images: 1,
       num_inference_steps: 28,
       guidance_scale: 3.5,
     },
   });
-  return request_id;
+  return {
+    requestId: sub.request_id,
+    statusUrl: sub.status_url,
+    responseUrl: sub.response_url,
+  };
 }
 
-/** Kling prompt'u en fazla 2500 karakter kabul eder; guvenli sinir. */
-const KLING_PROMPT_MAX = 2400;
+/** Seedance prompt'unu makul bir sinirda tut (cok uzun prompt reddedilebilir). */
+const VIDEO_PROMPT_MAX = 2400;
 
-/** kling i2v video uretimini queue'ya gonderir (workflow generate_video1 ayarlari). */
+/** Seedance 2.0 i2v video uretimini queue'ya gonderir (5sn, 9:16, sesli). */
 export async function submitVideo(
   prompt: string,
   imageUrl: string
-): Promise<string> {
-  const safePrompt = prompt.slice(0, KLING_PROMPT_MAX);
-  const { request_id } = await fal.queue.submit(KLING_ENDPOINT, {
+): Promise<FalJobRef> {
+  const safePrompt = prompt.slice(0, VIDEO_PROMPT_MAX);
+  const sub = await fal.queue.submit(SEEDANCE_ENDPOINT, {
     input: {
       image_url: imageUrl,
       prompt: safePrompt,
       duration: "5",
+      resolution: "720p",
       aspect_ratio: "9:16",
-      negative_prompt: VIDEO_NEGATIVE_PROMPT,
+      generate_audio: true,
     },
   });
-  return request_id;
+  return {
+    requestId: sub.request_id,
+    statusUrl: sub.status_url,
+    responseUrl: sub.response_url,
+  };
 }
 
 export type FalStatus = "IN_QUEUE" | "IN_PROGRESS" | "COMPLETED" | "ERROR";
@@ -74,28 +91,29 @@ export interface FalStatusResult {
 }
 
 /**
- * fal queue status/result icin BASE app id gerekir (ilk iki segment):
- *   fal-ai/flux/dev/image-to-image          -> fal-ai/flux
- *   fal-ai/kling-video/v2/master/i2v        -> fal-ai/kling-video
- * @fal-ai/client'in queue.status'u derin yollarda 422/405 verdigi icin
- * dogrudan REST kullaniyoruz (workflow ile ayni yaklasim).
+ * SSRF korumasi: status_url/response_url tarayicidan geri gelir; sunucu bu
+ * URL'leri FAL_KEY ile cektigi icin yalnizca fal.run host'larina izin veririz.
  */
-function baseApp(endpoint: string): string {
-  return endpoint.split("/").slice(0, 2).join("/");
+function assertFalUrl(u: string): URL {
+  const url = new URL(u);
+  if (url.protocol !== "https:" || !url.hostname.endsWith(".fal.run")) {
+    throw new Error("Gecersiz fal URL.");
+  }
+  return url;
 }
 
-/** Bir isin durumunu sorgular; COMPLETED ise medya URL'sini normalize eder. */
-export async function checkStatus(
-  endpoint: string,
-  requestId: string
+/**
+ * Bir isin durumunu submit'ten gelen status_url/response_url ile sorgular.
+ * COMPLETED ise response_url'den medya URL'sini normalize eder.
+ */
+export async function checkStatusByUrl(
+  statusUrl: string,
+  responseUrl: string
 ): Promise<FalStatusResult> {
-  const app = baseApp(endpoint);
+  assertFalUrl(statusUrl);
   const headers = { Authorization: `Key ${FAL_KEY}` };
 
-  const statusRes = await fetch(
-    `https://queue.fal.run/${app}/requests/${requestId}/status`,
-    { headers }
-  );
+  const statusRes = await fetch(statusUrl, { headers });
   const statusJson = (await statusRes.json()) as { status?: string };
   const s = statusJson.status as FalStatus | undefined;
 
@@ -103,15 +121,13 @@ export async function checkStatus(
     return { status: (s ?? "IN_PROGRESS") as FalStatus, raw: statusJson };
   }
 
-  const resultRes = await fetch(
-    `https://queue.fal.run/${app}/requests/${requestId}`,
-    { headers }
-  );
+  assertFalUrl(responseUrl);
+  const resultRes = await fetch(responseUrl, { headers });
   const data = (await resultRes.json()) as Record<string, unknown>;
   return { status: "COMPLETED", url: extractMediaUrl(data), raw: data };
 }
 
-/** flux ({images:[{url}]}) ve kling ({video:{url}}) ciktilarini destekler. */
+/** flux ({images:[{url}]}) ve seedance ({video:{url}}) ciktilarini destekler. */
 function extractMediaUrl(data: Record<string, unknown>): string | undefined {
   const video = data.video as { url?: string } | undefined;
   if (video?.url) return video.url;

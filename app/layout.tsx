@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "UGC Otomasyon — AI Video Uretici",
   description:
-    "Magazalar icin gercekci UGC AI videolari uretin: OpenRouter + fal.ai (flux + kling).",
+    "Magazalar icin gercekci UGC AI videolari uretin: Gemini + fal.ai (Flux 1.1 Pro + Seedance 2.0).",
 };
 
 export default function RootLayout({
