@@ -8,7 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateScripts } from "@/lib/openrouter";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+// Vercel Hobby plani fonksiyon basina en fazla 60 sn'ye izin verir.
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {

@@ -91,7 +91,7 @@ export default function Home() {
     // Adim listesini hazirla
     const base: Step[] = [
       { key: "upload", label: "Urun gorseli yukleniyor", state: "pending" },
-      { key: "persona", label: "Persona olusturuluyor (gemini-2.0-flash)", state: "pending" },
+      { key: "persona", label: "Persona olusturuluyor (gemini-2.5-flash)", state: "pending" },
       { key: "scripts", label: "Senaryolar yaziliyor (gemini-2.5-pro)", state: "pending" },
     ];
     for (let i = 1; i <= count; i++) {
