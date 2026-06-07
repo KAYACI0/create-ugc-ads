@@ -1,7 +1,7 @@
 /**
  * POST /api/upload  (multipart/form-data, alan: file)
  * Yuklenen urun gorselini fal storage'a koyar, public URL dondurur.
- * Bu URL hem Gemini vision cagrilarinda (indirilip base64) hem Flux i2i'de kullanilir.
+ * Bu URL hem OpenRouter vision cagrilarinda hem Flux i2i'de kullanilir.
  * Donus: { productImageUrl }
  */
 import { NextRequest, NextResponse } from "next/server";

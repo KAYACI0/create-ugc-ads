@@ -4,21 +4,19 @@
  * ------------------------------------------------------------
  *  Akis:
  *   1) PERSONA  : urun gorselinden ideal UGC yaraticisi profili
- *                 (Google AI Studio gemini-2.5-flash, vision)
+ *                 (OpenRouter google/gemini-2.5-flash, vision)
  *   2) SCRIPTS  : persona + urun + gorsel -> 3 adet 12sn UGC senaryosu
- *                 (Google AI Studio gemini-2.5-pro, vision, JSON cikti)
+ *                 (OpenRouter google/gemini-2.5-pro, vision, JSON cikti)
  *   3) FRAME    : Flux 1.1 Pro Redux icin ilk-kare promptu (persona[:300] ile)
  *   4) VIDEO    : Seedance 2.0 i2v promptu = senaryonun kendisi
  * ============================================================
  */
 
 /**
- * Google AI Studio (Gemini API) model id'leri — ucretsiz katman.
- * Not: AI Studio model adlari OpenRouter'daki gibi "google/" oneki ile DEGIL,
- * dogrudan "gemini-..." seklinde kullanilir.
+ * OpenRouter model id'leri ("google/" onekli kullanilir).
  */
-export const PERSONA_MODEL = "gemini-2.5-flash";
-export const SCRIPTS_MODEL = "gemini-2.5-pro";
+export const PERSONA_MODEL = "google/gemini-2.5-flash";
+export const SCRIPTS_MODEL = "google/gemini-2.5-pro";
 
 /**
  * 1) PERSONA — Casting Director / Consumer Psychologist.

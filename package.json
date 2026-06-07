@@ -2,7 +2,7 @@
   "name": "ugc-otomation",
   "version": "1.0.0",
   "private": true,
-  "description": "UGC AI video uretim otomasyonu - magazalar icin Google AI Studio (Gemini) + fal.ai (Flux 1.1 Pro + Seedance 2.0) ile gercekci UGC videolari uretir, Google Drive'a yukler ve e-posta ile bildirir.",
+  "description": "UGC AI video uretim otomasyonu - magazalar icin OpenRouter (Gemini) + fal.ai (Flux 1.1 Pro + Seedance 2.0) ile gercekci UGC videolari uretir, Google Drive'a yukler ve e-posta ile bildirir.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
