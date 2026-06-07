@@ -1,8 +1,9 @@
 /**
- * POST /api/video  { imageUrl, prompt }
+ * POST /api/video  { imageUrl, prompt, duration? }
  * Flux kare ciktisini Seedance 2.0 i2v ile (sesli) videoya cevirir (queue submit).
  *   - imageUrl: Flux kare URL'si
  *   - prompt  : ilgili UGC senaryosu
+ *   - duration: "5" | "10" (saniye, varsayilan "5")
  * Donus: { requestId, statusUrl, responseUrl }
  */
 import { NextRequest, NextResponse } from "next/server";
@@ -13,9 +14,10 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
-    const { imageUrl, prompt } = (await req.json()) as {
+    const { imageUrl, prompt, duration } = (await req.json()) as {
       imageUrl?: string;
       prompt?: string;
+      duration?: string;
     };
     if (!imageUrl || !prompt?.trim()) {
       return NextResponse.json(
@@ -23,7 +25,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    const job = await submitVideo(prompt, imageUrl);
+    const job = await submitVideo(prompt, imageUrl, duration);
     return NextResponse.json(job);
   } catch (err) {
     console.error("[/api/video]", err);

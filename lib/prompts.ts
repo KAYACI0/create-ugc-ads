@@ -21,16 +21,28 @@ export const SCRIPTS_MODEL = "google/gemini-2.5-pro";
 /**
  * 1) PERSONA — Casting Director / Consumer Psychologist.
  * Urun adi {{productName}} ile birlestirilir; urun gorseli vision olarak gonderilir.
+ * Opsiyonel: urun aciklamasi ve hedef kitle promptu zenginlestirir.
  */
-export function buildPersonaPrompt(productName: string): string {
+export function buildPersonaPrompt(
+  productName: string,
+  opts?: { productDescription?: string; targetAudience?: string }
+): string {
+  const desc = opts?.productDescription?.trim();
+  const audience = opts?.targetAudience?.trim();
+  const inputExtra = `${
+    desc ? `\nProduct Description: \`${desc}\`` : ""
+  }${audience ? `\nTarget Audience: \`${audience}\`` : ""}`;
+
   return `**// ROLE & GOAL //**
 You are an expert Casting Director and Consumer Psychologist. Your entire focus is on understanding people. Your sole task is to analyze the product in the provided image and generate a single, highly-detailed profile of the ideal person to promote it in a User-Generated Content (UGC) ad.
 
 The final output must ONLY be a description of this person. Do NOT create an ad script, ad concepts, or hooks. Your deliverable is a rich character profile that makes this person feel real, believable, and perfectly suited to be a trusted advocate for the product.
 
+Write the entire profile in English only.
+
 **// INPUT //**
 
-Product Name: \`${productName}\`
+Product Name: \`${productName}\`${inputExtra}
 
 **// REQUIRED OUTPUT STRUCTURE //**
 Please generate the persona profile using the following five-part structure. Be as descriptive and specific as possible within each section.
@@ -64,17 +76,67 @@ Please generate the persona profile using the following five-part structure. Be 
 }
 
 /**
- * 2) SCRIPTS — "Raw 12-Second UGC Video Scripts (Enhanced Edition)" master promptu.
- * persona ve productName gomulur; ayrica katı JSON cikti talimati eklenir
- * (workflow generate_ad_prompts dugumundeki gibi).
+ * 2) SCRIPTS — "Raw UGC Video Scripts (Enhanced Edition)" master promptu.
+ * persona + productName gomulur; opsiyonel urun aciklamasi eklenir.
+ * durationSec (5 veya 12) yapinin/zaman damgalarinin kac saniyelik yazilacagini belirler:
+ *   - 5 sn video  -> 5 saniyelik senaryo
+ *   - 10 sn video -> 12 saniyelik senaryo (klasik master prompt)
+ * Cikti her zaman katı JSON + sadece Ingilizce.
  */
 export function buildScriptsPrompt(
   persona: string,
-  productName: string
+  productName: string,
+  opts?: { productDescription?: string; durationSec?: number }
 ): string {
-  const master = `Master Prompt: Raw 12-Second UGC Video Scripts (Enhanced Edition)
+  const desc = opts?.productDescription?.trim();
+
+  // Sureye bagli (5 sn vs 12 sn) yapi/zaman degerleri
+  const D =
+    opts?.durationSec === 5
+      ? {
+          total: 5,
+          loose: `0-1 second:
+Start talking/showing immediately—like mid-conversation, no intro
+Hook them instantly with a relatable moment or immediate product reveal
+1-4 seconds:
+Show the product in action while talking naturally
+Camera might move closer or shift as they demonstrate
+This is where the main demo/benefit happens organically
+4-5 seconds:
+Wrap up thought while product is still visible
+Natural quick ending—snappy recommendation or casual sign-off
+Dialogue must finish by the 5-second mark`,
+          open: `[0:00-0:01] "[Opening line - 2-3 words, mid-thought energy]"`,
+          main: `[0:01-0:04] "[Main talking section - 10-14 words total. Include natural speech patterns like 'like,' 'literally,' 'I mean,' pauses. Sound conversational, not rehearsed.]"`,
+          close: `[0:04-0:05] "[Closing thought - 2-3 words. Must complete by the 5-second mark. Can trail off naturally.]"`,
+          shotRange: "0-1, 1-2, 2-3, 3-4, 4-5",
+        }
+      : {
+          total: 12,
+          loose: `0-2 seconds:
+Start talking/showing immediately—like mid-conversation
+Camera might still be adjusting as they find the angle
+Hook them with a relatable moment or immediate product reveal
+2-9 seconds:
+Show the product in action while continuing to talk naturally
+Camera might move closer, pull back, or shift as they demonstrate
+This is where the main demo/benefit happens organically
+9-12 seconds:
+Wrap up thought while product is still visible
+Natural ending—could trail off, quick recommendation, or casual sign-off
+Dialogue must finish by the 12-second mark`,
+          open: `[0:00-0:02] "[Opening line - 3-5 words, mid-thought energy]"`,
+          main: `[0:02-0:09] "[Main talking section - 20-25 words total. Include natural speech patterns like 'like,' 'literally,' 'I don't know,' pauses, self-corrections. Sound conversational, not rehearsed.]"`,
+          close: `[0:09-0:12] "[Closing thought - 3-5 words. Must complete by 12-second mark. Can trail off naturally.]"`,
+          shotRange: "0-1, 1-2, ... 11-12",
+        };
+
+  const productInput = `Product Name:
+${productName}${desc ? `\nProduct Description:\n${desc}` : ""}`;
+
+  const master = `Master Prompt: Raw ${D.total}-Second UGC Video Scripts (Enhanced Edition)
 You are an expert at creating authentic UGC video scripts that look like someone just grabbed their iPhone and hit record—shaky hands, natural movement, zero production value. No text overlays. No polish. Just real.
-Your goal: Create exactly 12-second video scripts with frame-by-frame detail that feel like genuine content someone would post, not manufactured ads.
+Your goal: Create exactly ${D.total}-second video scripts with frame-by-frame detail that feel like genuine content someone would post, not manufactured ads.
 
 You will be provided with an image that includes a reference to the product, but the entire ad should be a UGC-style (User Generated Content) video that gets created and scripted for. The first frame is going to be just the product, but you need to change away and then go into the rest of the video.
 
@@ -101,19 +163,8 @@ Multiple takes stitched together feeling
 Scripted-sounding delivery or brand speak
 
 
-The 12-Second Structure (Loose)
-0-2 seconds:
-Start talking/showing immediately—like mid-conversation
-Camera might still be adjusting as they find the angle
-Hook them with a relatable moment or immediate product reveal
-2-9 seconds:
-Show the product in action while continuing to talk naturally
-Camera might move closer, pull back, or shift as they demonstrate
-This is where the main demo/benefit happens organically
-9-12 seconds:
-Wrap up thought while product is still visible
-Natural ending—could trail off, quick recommendation, or casual sign-off
-Dialogue must finish by the 12-second mark
+The ${D.total}-Second Structure (Loose)
+${D.loose}
 
 Critical: NO Invented Details
 
@@ -128,8 +179,7 @@ Your Inputs
 Product Image: First image in this conversation
 Creator Profile:
 ${persona}
-Product Name:
-${productName}
+${productInput}
 
 Output: 3 Natural Scripts
 Three different authentic approaches:
@@ -143,22 +193,23 @@ Format for each script:
 SCRIPT [#]: [Simple angle in 3-5 words]
 The energy: [One specific line - excited? Chill? Matter-of-fact? Caffeinated? Half-awake?]
 What they say to camera (with timestamps):
-[0:00-0:02] "[Opening line - 3-5 words, mid-thought energy]"
-[0:02-0:09] "[Main talking section - 20-25 words total. Include natural speech patterns like 'like,' 'literally,' 'I don't know,' pauses, self-corrections. Sound conversational, not rehearsed.]"
-[0:09-0:12] "[Closing thought - 3-5 words. Must complete by 12-second mark. Can trail off naturally.]"
+${D.open}
+${D.main}
+${D.close}
 Shot-by-Shot Breakdown:
-Provide a detailed second-by-second (0-1, 1-2, ... 11-12) breakdown including camera position, camera movement, what's in frame, lighting, creator action, product visibility and the audio cue for each second.
+Provide a detailed second-by-second (${D.shotRange}) breakdown including camera position, camera movement, what's in frame, lighting, creator action, product visibility and the audio cue for each second.
 
 Enhanced Authenticity Guidelines
 Verbal Authenticity: Use filler words ("like," "literally," "so," "I mean," "honestly"), natural pauses, self-corrections, conversational fragments.
 Visual Authenticity Markers: finger briefly covering lens, focus hunting, slight overexposure from window light, background "real life" moments, natural product handling.
 Timing Authenticity: slight rushing at the end, natural breath pauses, varied talking speed.
 
-Remember: Every second matters. The more specific the shot breakdown, the more authentic the final video feels. If a detail seems too polished, make it messier. No text overlays ever. All dialogue must finish by the 12-second mark (can trail off naturally).`;
+Remember: Every second matters. The more specific the shot breakdown, the more authentic the final video feels. If a detail seems too polished, make it messier. No text overlays ever. All dialogue must finish by the ${D.total}-second mark (can trail off naturally).`;
 
-  // workflow generate_ad_prompts: prompt + CRITICAL JSON talimati
+  // prompt + CRITICAL talimatlari (sadece Ingilizce + katı JSON)
   return `${master}
 
+CRITICAL: Write ALL scripts (dialogue, energy, and shot breakdown) in ENGLISH only, no matter what language the product name or description is in.
 CRITICAL: Return ONLY a raw JSON object, no markdown, no explanation. Format: {"scripts": ["FULL SCRIPT 1", "FULL SCRIPT 2", "FULL SCRIPT 3"]}`;
 }
 

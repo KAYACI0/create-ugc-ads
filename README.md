@@ -69,12 +69,17 @@ fonksiyon zaman aşımına uğramaz.
 1. Uygulamayı aç (yerelde `http://localhost:3000`, canlıda Vercel adresin).
 2. **Ürün adı** yaz (örn. "Vitamin C Serum").
 3. **Kaç varyasyon** istediğini seç (1–3 video).
-4. (İsteğe bağlı) bildirim e-postası — boş bırakabilirsin.
-5. **Ürün fotoğrafı** yükle. *İpucu: temiz / nötr arka planlı, net ürün fotoğrafı en iyi sonucu verir.*
-6. **Video Üret**'e bas.
-7. İlerlemeyi adım adım izle: persona → senaryolar → her video için kare/video/Drive.
-8. Bitince her video için **önizleme + "Drive'da Görüntüle" + "İndir"** linkleri ve
-   senaryo metni ekranda görünür.
+4. (İsteğe bağlı) **Ürün açıklaması** — persona ve senaryoları zenginleştirir.
+5. (İsteğe bağlı) **Hedef kitle** — persona oluşturmaya yön verir.
+6. **Video süresi** seç: **5 sn** (5 sn senaryo) veya **10 sn** (12 sn senaryo).
+7. (İsteğe bağlı) bildirim e-postası — boş bırakabilirsin.
+8. **Ürün fotoğrafı** yükle. *İpucu: temiz / nötr arka planlı, net ürün fotoğrafı en iyi sonucu verir.*
+9. **Video Üret**'e bas.
+10. İlerlemeyi adım adım izle: persona → senaryolar → her video için kare/video/Drive.
+11. Bitince her video için **önizleme + "Drive'da Görüntüle" + "İndir"** linkleri ve
+    senaryo metni ekranda görünür.
+
+> Not: Senaryolar her zaman **İngilizce** üretilir (Seedance ses/diyalog kalitesi için).
 
 ⏱️ **Süre:** video başına ~2–4 dk (Seedance). 3 varyasyon ≈ 8–12 dk.
 💰 **Maliyet:** varyasyon başına kabaca **~$0.09** (Flux ~$0.04 + Seedance ~$0.05);

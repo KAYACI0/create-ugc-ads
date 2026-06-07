@@ -64,24 +64,26 @@ async function visionCompletion(
   return (json?.choices?.[0]?.message?.content ?? "").toString();
 }
 
-/** 1) Persona profili uretir. */
+/** 1) Persona profili uretir (opsiyonel urun aciklamasi + hedef kitle ile). */
 export async function generatePersona(
   productName: string,
-  imageUrl: string
+  imageUrl: string,
+  opts?: { productDescription?: string; targetAudience?: string }
 ): Promise<string> {
-  const text = buildPersonaPrompt(productName);
+  const text = buildPersonaPrompt(productName, opts);
   const persona = await visionCompletion(PERSONA_MODEL, text, imageUrl);
   if (!persona.trim()) throw new Error("Persona uretilemedi (bos yanit).");
   return persona.trim();
 }
 
-/** 2) 3 adet UGC senaryosu uretir. */
+/** 2) 3 adet UGC senaryosu uretir (opsiyonel aciklama + sureye gore yapi). */
 export async function generateScripts(
   persona: string,
   productName: string,
-  imageUrl: string
+  imageUrl: string,
+  opts?: { productDescription?: string; durationSec?: number }
 ): Promise<string[]> {
-  const text = buildScriptsPrompt(persona, productName);
+  const text = buildScriptsPrompt(persona, productName, opts);
   const content = await visionCompletion(SCRIPTS_MODEL, text, imageUrl, {
     jsonMode: true,
     maxTokens: 8192, // 3 detayli senaryo icin

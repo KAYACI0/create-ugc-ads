@@ -23,6 +23,9 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export default function Home() {
   const [productName, setProductName] = useState("");
+  const [productDescription, setProductDescription] = useState("");
+  const [targetAudience, setTargetAudience] = useState("");
+  const [duration, setDuration] = useState("5"); // "5" | "10" (saniye)
   const [email, setEmail] = useState("");
   const [count, setCount] = useState(3);
   const [file, setFile] = useState<File | null>(null);
@@ -119,15 +122,19 @@ export default function Home() {
       const { persona } = await postJson<{ persona: string }>("/api/persona", {
         productName,
         imageUrl,
+        productDescription,
+        targetAudience,
       });
       setStep("persona", "done");
 
-      // 3) Senaryolar
+      // 3) Senaryolar (5sn video -> 5sn senaryo, 10sn video -> 12sn senaryo)
       setStep("scripts", "active");
       const { scripts } = await postJson<{ scripts: string[] }>("/api/scripts", {
         persona,
         productName,
         imageUrl,
+        productDescription,
+        durationSec: duration === "10" ? 12 : 5,
       });
       const selected = scripts.slice(0, count);
       setStep("scripts", "done", `${selected.length} senaryo`);
@@ -152,13 +159,14 @@ export default function Home() {
           "image"
         );
 
-        setStep(stepKey, "active", "video uretiliyor (Seedance 2.0)");
+        setStep(stepKey, "active", `video uretiliyor (Seedance 2.0, ${duration}sn)`);
         const vid = await postJson<{
           statusUrl: string;
           responseUrl: string;
         }>("/api/video", {
           imageUrl: frameUrl,
           prompt: script,
+          duration,
         });
         const videoUrl = await pollUntilDone(
           vid.statusUrl,
@@ -250,6 +258,61 @@ export default function Home() {
               <option value={1}>1 video</option>
               <option value={2}>2 video</option>
               <option value={3}>3 video</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="field">
+          <label>Urun aciklamasi (opsiyonel)</label>
+          <textarea
+            value={productDescription}
+            onChange={(e) => setProductDescription(e.target.value)}
+            placeholder="Urun ne ise yarar, one cikan ozellikleri, faydalari..."
+            disabled={running}
+            rows={3}
+            style={{
+              width: "100%",
+              background: "var(--panel-2)",
+              border: "1px solid var(--border)",
+              borderRadius: 10,
+              color: "var(--text)",
+              padding: "11px 13px",
+              fontSize: 14,
+              fontFamily: "inherit",
+              resize: "vertical",
+            }}
+          />
+        </div>
+
+        <div className="row">
+          <div className="field">
+            <label>Hedef kitle (opsiyonel)</label>
+            <input
+              type="text"
+              value={targetAudience}
+              onChange={(e) => setTargetAudience(e.target.value)}
+              placeholder="Or. 25-35 yas calisan kadinlar"
+              disabled={running}
+            />
+          </div>
+          <div className="field">
+            <label>Video suresi</label>
+            <select
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              disabled={running}
+              style={{
+                width: "100%",
+                background: "var(--panel-2)",
+                border: "1px solid var(--border)",
+                borderRadius: 10,
+                color: "var(--text)",
+                padding: "11px 13px",
+                fontSize: 14,
+              }}
+            >
+              <option value="5">5 saniye</option>
+              <option value="10">10 saniye</option>
             </select>
           </div>
         </div>

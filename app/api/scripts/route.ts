@@ -13,18 +13,24 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
-    const { persona, productName, imageUrl } = (await req.json()) as {
-      persona?: string;
-      productName?: string;
-      imageUrl?: string;
-    };
+    const { persona, productName, imageUrl, productDescription, durationSec } =
+      (await req.json()) as {
+        persona?: string;
+        productName?: string;
+        imageUrl?: string;
+        productDescription?: string;
+        durationSec?: number;
+      };
     if (!persona || !productName || !imageUrl) {
       return NextResponse.json(
         { error: "persona, productName ve imageUrl zorunludur." },
         { status: 400 }
       );
     }
-    const scripts = await generateScripts(persona, productName, imageUrl);
+    const scripts = await generateScripts(persona, productName, imageUrl, {
+      productDescription,
+      durationSec: durationSec === 5 ? 5 : 12,
+    });
     if (scripts.length === 0) {
       return NextResponse.json(
         { error: "Senaryo uretilemedi." },

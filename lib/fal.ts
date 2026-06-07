@@ -59,17 +59,20 @@ export async function submitFrame(
 /** Seedance prompt'unu makul bir sinirda tut (cok uzun prompt reddedilebilir). */
 const VIDEO_PROMPT_MAX = 2400;
 
-/** Seedance 2.0 i2v video uretimini queue'ya gonderir (5sn, 9:16, sesli). */
+/** Seedance 2.0 i2v video uretimini queue'ya gonderir (9:16, sesli). */
 export async function submitVideo(
   prompt: string,
-  imageUrl: string
+  imageUrl: string,
+  duration: string = "5"
 ): Promise<FalJobRef> {
   const safePrompt = prompt.slice(0, VIDEO_PROMPT_MAX);
+  // Seedance yalnizca "auto"/"4".."15" string degerlerini kabul eder.
+  const safeDuration = duration === "10" ? "10" : "5";
   const sub = await fal.queue.submit(SEEDANCE_ENDPOINT, {
     input: {
       image_url: imageUrl,
       prompt: safePrompt,
-      duration: "5",
+      duration: safeDuration,
       resolution: "720p",
       aspect_ratio: "9:16",
       generate_audio: true,

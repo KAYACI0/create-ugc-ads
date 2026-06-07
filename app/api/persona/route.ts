@@ -12,17 +12,23 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
-    const { productName, imageUrl } = (await req.json()) as {
-      productName?: string;
-      imageUrl?: string;
-    };
+    const { productName, imageUrl, productDescription, targetAudience } =
+      (await req.json()) as {
+        productName?: string;
+        imageUrl?: string;
+        productDescription?: string;
+        targetAudience?: string;
+      };
     if (!productName || !imageUrl) {
       return NextResponse.json(
         { error: "productName ve imageUrl zorunludur." },
         { status: 400 }
       );
     }
-    const persona = await generatePersona(productName, imageUrl);
+    const persona = await generatePersona(productName, imageUrl, {
+      productDescription,
+      targetAudience,
+    });
     return NextResponse.json({ persona });
   } catch (err) {
     console.error("[/api/persona]", err);
