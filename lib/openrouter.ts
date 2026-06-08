@@ -68,7 +68,7 @@ async function visionCompletion(
 export async function generatePersona(
   productName: string,
   imageUrl: string,
-  opts?: { productDescription?: string; targetAudience?: string }
+  opts?: { productDescription?: string; targetAudience?: string; problemStatement?: string }
 ): Promise<string> {
   const text = buildPersonaPrompt(productName, opts);
   const persona = await visionCompletion(PERSONA_MODEL, text, imageUrl);
@@ -81,7 +81,7 @@ export async function generateScripts(
   persona: string,
   productName: string,
   imageUrl: string,
-  opts?: { productDescription?: string; durationSec?: number }
+  opts?: { productDescription?: string; durationSec?: number; problemStatement?: string }
 ): Promise<string[]> {
   const text = buildScriptsPrompt(persona, productName, opts);
   const content = await visionCompletion(SCRIPTS_MODEL, text, imageUrl, {

@@ -13,13 +13,14 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
-    const { persona, productName, imageUrl, productDescription, durationSec } =
+    const { persona, productName, imageUrl, productDescription, durationSec, problemStatement } =
       (await req.json()) as {
         persona?: string;
         productName?: string;
         imageUrl?: string;
         productDescription?: string;
         durationSec?: number;
+        problemStatement?: string;
       };
     if (!persona || !productName || !imageUrl) {
       return NextResponse.json(
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest) {
     const scripts = await generateScripts(persona, productName, imageUrl, {
       productDescription,
       durationSec: durationSec === 5 ? 5 : 12,
+      problemStatement,
     });
     if (scripts.length === 0) {
       return NextResponse.json(

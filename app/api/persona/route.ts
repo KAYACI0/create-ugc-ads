@@ -12,12 +12,13 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
-    const { productName, imageUrl, productDescription, targetAudience } =
+    const { productName, imageUrl, productDescription, targetAudience, problemStatement } =
       (await req.json()) as {
         productName?: string;
         imageUrl?: string;
         productDescription?: string;
         targetAudience?: string;
+        problemStatement?: string;
       };
     if (!productName || !imageUrl) {
       return NextResponse.json(
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
     const persona = await generatePersona(productName, imageUrl, {
       productDescription,
       targetAudience,
+      problemStatement,
     });
     return NextResponse.json({ persona });
   } catch (err) {

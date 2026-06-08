@@ -24,6 +24,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export default function Home() {
   const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
+  const [problemStatement, setProblemStatement] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
   const [duration, setDuration] = useState("5"); // "5" | "10" (saniye)
   const [email, setEmail] = useState("");
@@ -124,6 +125,7 @@ export default function Home() {
         imageUrl,
         productDescription,
         targetAudience,
+        problemStatement,
       });
       setStep("persona", "done");
 
@@ -135,6 +137,7 @@ export default function Home() {
         imageUrl,
         productDescription,
         durationSec: duration === "10" ? 12 : 5,
+        problemStatement,
       });
       const selected = scripts.slice(0, count);
       setStep("scripts", "done", `${selected.length} senaryo`);
@@ -270,6 +273,28 @@ export default function Home() {
             placeholder="Urun ne ise yarar, one cikan ozellikleri, faydalari..."
             disabled={running}
             rows={3}
+            style={{
+              width: "100%",
+              background: "var(--panel-2)",
+              border: "1px solid var(--border)",
+              borderRadius: 10,
+              color: "var(--text)",
+              padding: "11px 13px",
+              fontSize: 14,
+              fontFamily: "inherit",
+              resize: "vertical",
+            }}
+          />
+        </div>
+
+        <div className="field">
+          <label>Ne problemini cozuyor? / Ana faydalari (opsiyonel)</label>
+          <textarea
+            value={problemStatement}
+            onChange={(e) => setProblemStatement(e.target.value)}
+            placeholder="Or. 'Sabah rutinini 30 dk kisaltiyor, cilt lekeleri 2 haftada solar' — Script 2 bu problemi/cozumu kullanir"
+            disabled={running}
+            rows={2}
             style={{
               width: "100%",
               background: "var(--panel-2)",

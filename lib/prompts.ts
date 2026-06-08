@@ -25,13 +25,14 @@ export const SCRIPTS_MODEL = "google/gemini-2.5-pro";
  */
 export function buildPersonaPrompt(
   productName: string,
-  opts?: { productDescription?: string; targetAudience?: string }
+  opts?: { productDescription?: string; targetAudience?: string; problemStatement?: string }
 ): string {
   const desc = opts?.productDescription?.trim();
   const audience = opts?.targetAudience?.trim();
+  const problem = opts?.problemStatement?.trim();
   const inputExtra = `${
     desc ? `\nProduct Description: \`${desc}\`` : ""
-  }${audience ? `\nTarget Audience: \`${audience}\`` : ""}`;
+  }${audience ? `\nTarget Audience: \`${audience}\`` : ""}${problem ? `\nKey Problem This Product Solves / Main Benefits: \`${problem}\`` : ""}`;
 
   return `**// ROLE & GOAL //**
 You are an expert Casting Director and Consumer Psychologist. Your entire focus is on understanding people. Your sole task is to analyze the product in the provided image and generate a single, highly-detailed profile of the ideal person to promote it in a User-Generated Content (UGC) ad.
@@ -72,7 +73,7 @@ Please generate the persona profile using the following five-part structure. Be 
 * **Home Environment:** What does their personal space look like? (e.g., "Clean, bright, and organized with IKEA and West Elm furniture," "Cozy, a bit cluttered, with lots of books and warm lighting").
 
 **V. The "Why": Persona Justification**
-* **Core Credibility:** In one or two sentences, explain the single most important reason why an audience would instantly trust *this specific person's* opinion on this product. (e.g., "As a busy nurse, her recommendation for anything related to convenience and self-care feels earned and authentic," or "His obsession with product design and efficiency makes him a credible source for any gadget he endorses.")`;
+* **Core Credibility:** In one or two sentences, explain the single most important reason why an audience would instantly trust *this specific person's* opinion on this product. (e.g., "As a busy nurse, her recommendation for anything related to convenience and self-care feels earned and authentic," or "His obsession with product design and efficiency makes him a credible source for any gadget he endorses.")${problem ? `\n* **Product's Core Promise:** The product is claimed to solve: "${problem}". The persona's Daily Frustrations (Section IV) MUST directly connect to this specific pain point so the Problem → Solution story arc feels authentic and believable.` : ""}`;
 }
 
 /**
@@ -86,9 +87,10 @@ Please generate the persona profile using the following five-part structure. Be 
 export function buildScriptsPrompt(
   persona: string,
   productName: string,
-  opts?: { productDescription?: string; durationSec?: number }
+  opts?: { productDescription?: string; durationSec?: number; problemStatement?: string }
 ): string {
   const desc = opts?.productDescription?.trim();
+  const problem = opts?.problemStatement?.trim();
 
   // Sureye bagli (5 sn vs 12 sn) yapi/zaman degerleri
   const D =
@@ -132,7 +134,7 @@ Dialogue must finish by the 12-second mark`,
         };
 
   const productInput = `Product Name:
-${productName}${desc ? `\nProduct Description:\n${desc}` : ""}`;
+${productName}${desc ? `\nProduct Description:\n${desc}` : ""}${problem ? `\nKey Problem This Product Solves / Main Benefits:\n${problem}` : ""}`;
 
   const master = `Master Prompt: Raw ${D.total}-Second UGC Video Scripts (Enhanced Edition)
 You are an expert at creating authentic UGC video scripts that look like someone just grabbed their iPhone and hit record—shaky hands, natural movement, zero production value. No text overlays. No polish. Just real.
@@ -185,13 +187,15 @@ Output: 3 Natural Scripts
 Three different authentic approaches:
 
 Excited Discovery - Just found it, have to share
-Casual Recommendation - Talking to camera like a friend
+Problem → Solution Story - Open with a relatable frustration or pain point the viewer KNOWS (from the creator's life/persona), then naturally reveal how this product solved it. The "before" feeling should be vivid and specific. The "after" should feel like relief, not hype.
 In-the-Moment Demo - Showing while using it
 
 
 Format for each script:
 SCRIPT [#]: [Simple angle in 3-5 words]
 The energy: [One specific line - excited? Chill? Matter-of-fact? Caffeinated? Half-awake?]
+
+IMPORTANT for SCRIPT 2 (Problem → Solution Story): The dialogue MUST open with the specific pain point from the Creator Profile's "Daily Frustrations" section. The structure should feel like "I used to [pain], and then I found [product]" but said naturally and conversationally — NOT as a polished brand line. If Key Problem / Benefits were provided in the product inputs, use them to make the "after" feel concrete and specific.${problem ? ` The key problem/benefit to address: "${problem}".` : ""}
 What they say to camera (with timestamps):
 ${D.open}
 ${D.main}
