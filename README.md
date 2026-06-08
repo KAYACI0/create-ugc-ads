@@ -1,179 +1,283 @@
 # 🎬 Create UGC Ads — Yapay Zeka UGC Video Üretici
 
-Mağazalar / e-ticaret ürünleri için **gerçekçi UGC (kullanıcı tarzı) reklam videoları**
-üreten, kendi başına çalışan bir web uygulaması. Tek yaptığın bir **ürün fotoğrafı**
-yüklemek ve **ürün adını** yazmak; sistem gerisini hallediyor.
+Mağazalar / e-ticaret ürünleri için **gerçekçi UGC (kullanıcı tarzı) reklam videoları** üreten, kendi başına çalışan bir web uygulaması. Tek yaptığın bir **ürün fotoğrafı** yüklemek ve birkaç bilgi girmek; sistem gerisini hallediyor.
 
 > n8n otomasyonundan bağımsız, tek tıkla Vercel'e deploy edilebilen Next.js uygulaması.
 
 ---
 
-## 📌 Ne yapar? (Özet)
+## 📌 Ne yapar?
 
 1. Ürün fotoğrafına bakıp o ürünü en iyi tanıtacak **ideal kişiyi (persona)** tasarlar.
-2. Bu personaya göre **3 farklı, 12 saniyelik UGC senaryosu** yazar.
+2. Bu personaya göre **3 farklı UGC senaryosu** yazar — her biri farklı bir satış açısı kullanır.
 3. Her senaryo için ürün fotoğrafından **gerçekçi bir "selfie" karesi** üretir.
-4. Bu kareyi **harekete geçirip videoya** çevirir.
+4. Bu kareyi **harekete geçirip sesli videoya** çevirir.
 5. Videoları **Google Drive'a yükler** ve paylaşılabilir link verir.
 
 Sonuç: tek bir fotoğraftan, sosyal medyaya hazır **3 farklı gerçekçi reklam videosu**.
 
 ---
 
-## ⚙️ Sistem nasıl çalışır? (Akış)
+## ⚙️ Sistem Akışı
 
 ```
-  Ürün fotoğrafı + Ürün adı
-            │
-            ▼
-   [1] fal storage'a yükle ───────────────► herkese açık görsel URL
-            │
-            ▼
-   [2] PERSONA   (OpenRouter · gemini-2.5-flash, görseli "görür")
-            │   → ideal influencer profili (yaş, tarz, ton, neden güvenilir...)
-            ▼
-   [3] SENARYOLAR (OpenRouter · gemini-2.5-pro)
-            │   → 3 adet 12 sn'lik UGC senaryosu (replik + sahne)
-            ▼
-   ┌─ her senaryo için (1-3 kez) ──────────────────────────┐
-   │  [4] KARE   fal · flux-pro/v1.1/redux (Flux 1.1 Pro)   │
-   │       → ürün fotoğrafından UGC selfie karesi           │
-   │  [5] VIDEO  fal · seedance-2.0 i2v (sesli, 9:16)       │
-   │       → kareyi 5 sn'lik dikey videoya çevirir          │
-   │  [6] DRIVE  videoyu Google Drive'a yükler + link verir │
-   └────────────────────────────────────────────────────────┘
-            │
-            ▼
-   Ekranda: video önizleme + Drive linkleri + senaryo metni
+Ürün Fotoğrafı + Ürün Bilgileri
+         │
+         ▼
+[1] fal storage'a yükle ───────────► herkese açık görsel URL
+         │
+         ▼
+[2] PERSONA   (Gemini 2.5 Flash — görseli "görür")
+         │   → ideal influencer profili
+         │     (yaş, tarz, ton, pain point'ler, neden güvenilir...)
+         ▼
+[3] SENARYOLAR (Gemini 2.5 Pro)
+         │   → 3 farklı UGC senaryosu:
+         │     Script 1: Coşkulu Keşif
+         │     Script 2: Problem → Çözüm Hikayesi  ← yeni
+         │     Script 3: Anlık Demo
+         ▼
+┌─ her senaryo için (1–3 kez) ─────────────────────────┐
+│  [4] KARE   Flux 1.1 Pro Redux                        │
+│       → ürün fotoğrafından UGC selfie karesi          │
+│  [5] VİDEO  Seedance 2.0 i2v (sesli, 9:16)           │
+│       → kareyi 5–10 sn'lik dikey videoya çevirir     │
+│  [6] DRIVE  videoyu Google Drive'a yükler + link      │
+└───────────────────────────────────────────────────────┘
+         │
+         ▼
+Ekranda: video önizleme + Drive linkleri + senaryo metni
 ```
-
-### Kullanılan AI modelleri
-| Adım | Servis / Model | Maliyet |
-|------|----------------|---------|
-| Persona | OpenRouter `google/gemini-2.5-flash` (vision) | ~birkaç ¢ |
-| Senaryolar | OpenRouter `google/gemini-2.5-pro` (vision) | ~birkaç ¢ |
-| Görsel (kare) | fal.ai `fal-ai/flux-pro/v1.1/redux` | ~$0.04 / görsel |
-| Video | fal.ai `bytedance/seedance-2.0/image-to-video` (sesli) | ~$0.05 / video |
-| Depolama | Google Drive (OAuth) | Ücretsiz |
-
-### Neden Vercel'de sorunsuz çalışır?
-Video üretimi dakikalar sürer; sunucusuz (serverless) fonksiyonlar ise kısa ömürlüdür.
-Bu yüzden ağır iş **fal.ai'nin kuyruğunda (queue)** asenkron yapılır: sunucumuz sadece
-işi başlatır ve durumu sorgular; uzun bekleme **tarayıcıda** olur. Böylece hiçbir
-fonksiyon zaman aşımına uğramaz.
 
 ---
 
-## 🚀 Nasıl kullanılır? (Adım adım)
+## 🎯 3 Senaryo Tipi
 
-1. Uygulamayı aç (yerelde `http://localhost:3000`, canlıda Vercel adresin).
-2. **Ürün adı** yaz (örn. "Vitamin C Serum").
-3. **Kaç varyasyon** istediğini seç (1–3 video).
-4. (İsteğe bağlı) **Ürün açıklaması** — persona ve senaryoları zenginleştirir.
-5. (İsteğe bağlı) **Hedef kitle** — persona oluşturmaya yön verir.
-6. **Video süresi** seç: **5 sn** (5 sn senaryo) veya **10 sn** (12 sn senaryo).
-7. (İsteğe bağlı) bildirim e-postası — boş bırakabilirsin.
-8. **Ürün fotoğrafı** yükle. *İpucu: temiz / nötr arka planlı, net ürün fotoğrafı en iyi sonucu verir.*
-9. **Video Üret**'e bas.
-10. İlerlemeyi adım adım izle: persona → senaryolar → her video için kare/video/Drive.
-11. Bitince her video için **önizleme + "Drive'da Görüntüle" + "İndir"** linkleri ve
-    senaryo metni ekranda görünür.
+| # | Tip | Nasıl çalışır |
+|---|-----|---------------|
+| 1 | **Coşkulu Keşif** | "Az önce buldum, paylaşmam lazımdı" enerjisi |
+| 2 | **Problem → Çözüm** | Önce izleyicinin yaşadığı sıkıntıyı açar, sonra ürünün nasıl çözdüğünü doğal dille anlatır |
+| 3 | **Anlık Demo** | Ürünü kullanırken gösterir, faydayı yaşayarak aktarır |
 
-> Not: Senaryolar her zaman **İngilizce** üretilir (Seedance ses/diyalog kalitesi için).
-
-⏱️ **Süre:** video başına ~2–4 dk (Seedance). 3 varyasyon ≈ 8–12 dk.
-💰 **Maliyet:** varyasyon başına kabaca **~$0.09** (Flux ~$0.04 + Seedance ~$0.05);
-persona/senaryo OpenRouter'da çok küçük LLM ücreti (~$0.07/çalıştırma).
+> Script 2, "Ne problemini çözüyor?" alanına girdiğin bilgiyi doğrudan kullanır. Ne kadar spesifik girersen senaryo o kadar güçlü olur.
 
 ---
 
-## 🔧 Yerel kurulum (geliştirme)
+## 🚀 Kullanım (Adım Adım)
+
+### 1. Uygulamayı aç
+- Yerelde: `http://localhost:3000`
+- Canlıda: Vercel adresin
+
+### 2. Formu doldur
+
+| Alan | Zorunlu | Açıklama |
+|------|---------|----------|
+| **Ürün adı** | ✅ | Kısa ve net. Örn: `Vitamin C Serum` |
+| **Kaç varyasyon?** | ✅ | 1, 2 veya 3 video |
+| **Ürün açıklaması** | ⬜ | Genel özellikler, kullanım şekli |
+| **Ne problemini çözüyor?** | ⬜ | ⭐ En önemli alan — Script 2 buradan beslenir |
+| **Hedef kitle** | ⬜ | Persona oluşturmaya yön verir |
+| **Video süresi** | ✅ | 5 sn veya 10 sn |
+| **Bildirim e-postası** | ⬜ | Bitince e-posta gönderilsin mi? |
+| **Ürün fotoğrafı** | ✅ | Temiz/nötr arka plan en iyi sonucu verir |
+
+### 3. "Video Üret"e bas
+
+İlerlemeyi adım adım izle:
+```
+✓ Ürün görseli yükleniyor
+✓ Persona oluşturuluyor (gemini-2.5-flash)
+✓ Senaryolar yazılıyor (gemini-2.5-pro)
+⟳ Video 1 üretiliyor — kare üretiliyor (Flux 1.1 Pro)
+⟳ Video 1 üretiliyor — video üretiliyor (Seedance 2.0, 5sn)
+⟳ Video 1 üretiliyor — Drive'a yükleniyor
+✓ Video 1 üretildi
+...
+```
+
+### 4. Sonuçları al
+
+Her video için:
+- ▶️ Tarayıcıda önizleme
+- 🔗 Drive'da Görüntüle linki
+- ⬇️ İndir linki
+- 📄 Senaryo metni (aç/kapat)
+
+---
+
+## 💡 "Ne problemini çözüyor?" Alanı — İpuçları
+
+Bu alan Script 2'yi (Problem → Çözüm) besler. Ne kadar spesifik girersen, senaryo o kadar güçlü olur.
+
+**Zayıf giriş:**
+> "Cildi nemlendiriyor"
+
+**Güçlü giriş:**
+> "Sabah uyandığımda cildim çok kuru ve sıkışık hissettiriyordu, makyaj da düzgün oturmuyordu. Bu serum sabah rutinime girdi ve 10 günde fark ettim — cilt daha dolgun, makyaj çok daha kolay oturuyor."
+
+Formatı kopyalayabilirsin:
+```
+ÖNCE (problem): [kullanıcının yaşadığı somut sıkıntı]
+SONRA (çözüm): [ürün kullandıktan sonra ne değişti, ne kadar sürede]
+```
+
+---
+
+## 🛠️ Kurulum (Yerel Geliştirme)
 
 ```bash
+git clone https://github.com/KAYACI0/create-ugc-ads.git
+cd create-ugc-ads
 npm install
 cp .env.example .env.local     # Windows: copy .env.example .env.local
-# .env.local içindeki anahtarları doldur (aşağıya bak)
-npm run dev                     # http://localhost:3000
+# .env.local içindeki anahtarları doldur
+npm run dev                    # http://localhost:3000
 ```
 
-### Gerekli anahtarlar (`.env.local`)
+### Gerekli API Anahtarları
+
 | Değişken | Nereden alınır |
 |----------|----------------|
-| `FAL_KEY` | https://fal.ai/dashboard/keys (bakiye gerekir) |
-| `OPENROUTER_API_KEY` | https://openrouter.ai/keys (kredi gerekir) |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Cloud Console → OAuth client (Desktop app) |
-| `GOOGLE_REFRESH_TOKEN` | `npm run get-google-token` ile alınır |
+| `FAL_KEY` | [fal.ai/dashboard/keys](https://fal.ai/dashboard/keys) — bakiye gerekir |
+| `OPENROUTER_API_KEY` | [openrouter.ai/keys](https://openrouter.ai/keys) — kredi gerekir |
+| `GOOGLE_CLIENT_ID` | Google Cloud Console → OAuth client (Desktop app) |
+| `GOOGLE_CLIENT_SECRET` | Google Cloud Console → OAuth client (Desktop app) |
+| `GOOGLE_REFRESH_TOKEN` | `npm run get-google-token` ile alınır (aşağıya bak) |
 | `GDRIVE_FOLDER_ID` | Drive klasör URL'sindeki son parça (boş = ana dizin) |
-| `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `NOTIFY_EMAIL` | (opsiyonel) e-posta bildirimi için |
+| `GMAIL_USER` | (opsiyonel) e-posta bildirimi için |
+| `GMAIL_APP_PASSWORD` | (opsiyonel) Gmail uygulama şifresi |
+| `NOTIFY_EMAIL` | (opsiyonel) bildirim alacak adres |
 
-#### Google Drive kurulumu
-1. Google Cloud Console → **Google Drive API**'yi **Enable** et.
-2. **OAuth consent screen → Test users**'a kendi Gmail'ini ekle.
-3. **Credentials → OAuth client ID → Desktop app** oluştur; ID/Secret'i `.env.local`'e yaz.
-4. `npm run get-google-token` → açılan linki onayla → terminaldeki `refresh_token`'ı
-   `GOOGLE_REFRESH_TOKEN`'a koy. *(Web app client kullanıyorsan redirect URIs'e
-   `http://localhost:42813` ekle.)*
-5. Drive'da bir klasör aç, URL'deki son parçayı `GDRIVE_FOLDER_ID`'ye koy.
+### Google Drive Kurulumu (Adım Adım)
 
-> E-posta istemiyorsan Gmail alanlarını boş bırak — o adım otomatik atlanır.
+1. [Google Cloud Console](https://console.cloud.google.com/) → sol menü **APIs & Services → Library**
+2. **"Google Drive API"** ara → **Enable** et
+3. **APIs & Services → OAuth consent screen**
+   - User Type: **External**
+   - Test users → kendi Gmail adresini ekle
+4. **Credentials → Create Credentials → OAuth client ID**
+   - Application type: **Desktop app**
+   - Oluşturulan `Client ID` ve `Client Secret`'ı `.env.local`'e yaz
+5. Terminal'de:
+   ```bash
+   npm run get-google-token
+   ```
+   Açılan linki tarayıcıda onayla → terminaldeki `refresh_token` değerini `GOOGLE_REFRESH_TOKEN`'a yaz
+6. Drive'da bir klasör oluştur → URL'deki son parçayı `GDRIVE_FOLDER_ID`'ye yaz
 
----
-
-## ✅ Test / Doğrulama
-
-- **Hızlı boot testi:** `npm run dev` → `http://localhost:3000` açılıyor mu?
-- **Uçtan uca (Drive/e-posta hariç) test:** dev sunucusu açıkken
-  ```bash
-  node scripts/e2e-test.mjs
-  ```
-  Bu, örnek bir ürün görseliyle persona → senaryo → kare → video zincirini çalıştırıp
-  süreleri ve çıktı URL'lerini yazdırır.
-- **Tam test:** tarayıcıdan gerçek bir ürün fotoğrafı yükleyip "Video Üret".
+> E-posta bildirimi istemiyorsan `GMAIL_*` alanlarını boş bırak — o adım otomatik atlanır.
 
 ---
 
-## ☁️ Vercel'e deploy
+## ☁️ Vercel'e Deploy
 
-1. Bu repoyu Vercel'de **New Project** ile içe aktar.
-2. **Settings → Environment Variables**'a `.env.example`'daki tüm anahtarları gir
-   (`FAL_KEY`, `OPENROUTER_API_KEY`, `GOOGLE_*`, `GDRIVE_FOLDER_ID`, varsa `GMAIL_*`).
-   `APP_URL`'i canlı Vercel adresin yap.
-3. **Deploy.**
+1. [vercel.com](https://vercel.com) → **New Project** → bu repoyu içe aktar
+2. **Settings → Environment Variables** → `.env.example`'daki tüm anahtarları gir
+3. `APP_URL` değişkenini Vercel'in verdiği alan adıyla güncelle
+4. **Deploy** — her `git push main` otomatik yeniden deploy eder
 
-> `.env.local` asla repoya gönderilmez (`.gitignore`'da). Anahtarlar yalnızca Vercel
-> ortam değişkenlerinde tutulur.
+> `.env.local` asla repoya gönderilmez (`.gitignore`'da). Anahtarlar yalnızca Vercel ortam değişkenlerinde tutulur.
 
 ---
 
-## 🗂️ Proje yapısı
+## 🤖 Kullanılan AI Modelleri
+
+| Adım | Servis / Model | Görev |
+|------|----------------|-------|
+| Persona | OpenRouter `google/gemini-2.5-flash` | Görsel analiz + karakter profili |
+| Senaryolar | OpenRouter `google/gemini-2.5-pro` | 3 UGC senaryosu (JSON) |
+| Kare | fal.ai `fal-ai/flux-pro/v1.1/redux` | UGC selfie karesi üretimi |
+| Video | fal.ai `bytedance/seedance-2.0/image-to-video` | Sesli dikey video |
+| Depolama | Google Drive (OAuth) | Video arşivi + paylaşım |
+
+### Maliyet (yaklaşık)
+
+| Kalem | Maliyet |
+|-------|---------|
+| Flux kare (x1) | ~$0.04 |
+| Seedance video (x1) | ~$0.05 |
+| Gemini persona + senaryo (tüm çalıştırma) | ~$0.07 |
+| **3 video toplam** | **~$0.34** |
+
+### Süre
+
+- Video başına: **2–4 dakika** (Seedance kuyruğuna bağlı)
+- 3 varyasyon: **~8–12 dakika**
+
+---
+
+## 🗂️ Proje Yapısı
 
 ```
 app/
-  page.tsx              Form + adım adım ilerleme + sonuç (çoklu video)
-  api/upload            foto → fal storage (public URL)
-  api/persona           OpenRouter gemini-2.5-flash → persona
-  api/scripts           OpenRouter gemini-2.5-pro  → 3 senaryo
-  api/frame             Flux 1.1 Pro Redux submit (UGC kare)
-  api/video             Seedance 2.0 i2v submit (sesli)
-  api/status            fal queue durum sorgusu (status_url ile polling)
-  api/finalize          videoyu Drive'a yükle (yoksa fal linkine düşer)
-  api/notify            (opsiyonel) özet e-posta
+  page.tsx              Form + ilerleme adımları + sonuç ekranı
+  api/
+    upload/             Fotoğraf → fal storage (public URL)
+    persona/            Gemini 2.5 Flash → persona profili
+    scripts/            Gemini 2.5 Pro → 3 senaryo (JSON)
+    frame/              Flux 1.1 Pro Redux → UGC kare (queue submit)
+    video/              Seedance 2.0 → sesli video (queue submit)
+    status/             fal queue durum sorgusu (polling)
+    finalize/           Video → Drive yükleme + link
+    notify/             (opsiyonel) özet e-posta
 lib/
-  fal.ts  openrouter.ts  drive.ts  mail.ts  prompts.ts
+  prompts.ts            Tüm AI promptları ve model ID'leri
+  openrouter.ts         Gemini API çağrıları
+  fal.ts                Flux + Seedance queue işlemleri
+  drive.ts              Google Drive yükleme
+  mail.ts               Gmail bildirimi
 scripts/
-  get-google-token.mjs  Drive refresh token alma
-  e2e-test.mjs          uçtan uca test
+  get-google-token.mjs  Drive OAuth refresh token alma
+  e2e-test.mjs          Uçtan uca test scripti
 ```
 
-## 🎛️ Özelleştirme
-- **Promptlar / modeller:** `lib/prompts.ts` (persona promptu, "Raw 12-Second UGC"
-  master promptu, `PERSONA_MODEL` / `SCRIPTS_MODEL`).
-- **Model parametreleri:** `lib/fal.ts` (Flux Redux `image_size` `portrait_4_3`,
-  `guidance_scale`; Seedance `duration` "5", `resolution` "720p",
-  `aspect_ratio` "9:16", `generate_audio`).
+---
 
-## 🩺 Sık karşılaşılanlar
-- **402 / "requires more credits" (OpenRouter):** kredi yükle.
-- **403 / "Exhausted balance" (fal):** fal bakiyesi yükle.
-- **"Drive API has not been used…":** Google Cloud'da Drive API'yi Enable et, 1-2 dk bekle.
-- **`access_denied` (token alırken):** OAuth consent screen → Test users'a Gmail'ini ekle.
+## 🎛️ Özelleştirme
+
+- **Promptlar / modeller:** `lib/prompts.ts`
+  - `PERSONA_MODEL`, `SCRIPTS_MODEL` — model değiştirme
+  - `buildPersonaPrompt` — persona yapısını özelleştirme
+  - `buildScriptsPrompt` — senaryo tiplerini ve talimatları düzenleme
+- **Görsel & video parametreleri:** `lib/fal.ts`
+  - Flux: `image_size`, `guidance_scale`, `num_inference_steps`
+  - Seedance: `duration`, `resolution`, `aspect_ratio`, `generate_audio`
+
+---
+
+## ✅ Test
+
+```bash
+# Hızlı boot testi
+npm run dev   # http://localhost:3000 açılıyor mu?
+
+# Uçtan uca (Drive/e-posta hariç)
+node scripts/e2e-test.mjs
+# → persona, senaryo, kare, video zincirini çalıştırır; URL'leri yazdırır
+
+# Tam test
+# Tarayıcıdan gerçek ürün fotoğrafı yükle → "Video Üret"
+```
+
+---
+
+## 🩺 Sık Karşılaşılan Hatalar
+
+| Hata | Çözüm |
+|------|-------|
+| `402 / "requires more credits"` | OpenRouter'a kredi yükle |
+| `403 / "Exhausted balance"` | fal.ai bakiyesi yükle |
+| `"Drive API has not been used…"` | Google Cloud'da Drive API'yi Enable et, 1-2 dk bekle |
+| `access_denied` (token alırken) | OAuth consent screen → Test users'a Gmail'ini ekle |
+| Video üretildi ama Drive'a yüklenemedi | `GOOGLE_REFRESH_TOKEN` süresi dolmuş olabilir, `npm run get-google-token` ile yenile |
+| Senaryo boş geliyor | OpenRouter kredi kontrolü yap; `OPENROUTER_API_KEY` doğruluğunu kontrol et |
+
+---
+
+## 📝 Notlar
+
+- Senaryolar her zaman **İngilizce** üretilir (Seedance ses/diyalog kalitesi için).
+- Script 2 (Problem → Çözüm) en ikna edici senaryo tipidir; **"Ne problemini çözüyor?"** alanını doldurmak kaliteyi belirgin şekilde artırır.
+- Temiz, nötr arka planlı ürün fotoğrafları Flux ile en iyi kareyi üretir.
+- Vercel'de serverless zaman aşımı sorunu yaşanmaz — ağır iş fal.ai kuyruğunda asenkron çalışır, polling tarayıcıdan yapılır.
