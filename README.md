@@ -188,7 +188,7 @@ npm run dev                    # http://localhost:3000
 | Persona | OpenRouter `google/gemini-2.5-flash` | Görsel analiz + karakter profili |
 | Senaryolar | OpenRouter `google/gemini-2.5-pro` | 3 UGC senaryosu (JSON) |
 | Kare | fal.ai `fal-ai/flux-pro/v1.1/redux` | UGC selfie karesi üretimi |
-| Video | fal.ai `fal-ai/kling-video/v3/pro/image-to-video` | Dikey video (9:16) |
+| Video | fal.ai `fal-ai/bytedance/seedance/v1.5/pro/image-to-video` | Sesli dikey video (720p, 9:16) |
 | Depolama | Google Drive (OAuth) | Video arşivi + paylaşım |
 
 ### Maliyet (yaklaşık)
@@ -196,7 +196,7 @@ npm run dev                    # http://localhost:3000
 | Kalem | Maliyet |
 |-------|---------|
 | Flux kare (x1) | ~$0.04 |
-| Kling v3 Pro video (x1) | ~$0.07 |
+| Seedance 1.5 Pro video (x1, 720p, 5sn) | ~$0.26 |
 | Gemini persona + senaryo (tüm çalıştırma) | ~$0.07 |
 | **3 video toplam** | **~$0.34** |
 

@@ -19,8 +19,8 @@ fal.config({ credentials: FAL_KEY });
 // Not: tip kasitli olarak `string` -> @fal-ai/client InputType<string> = Record<string, any>
 // boylece image_size / aspect_ratio gibi alanlar tip hatasi vermez.
 export const FLUX_ENDPOINT: string = "fal-ai/flux-pro/v1.1/redux";
-export const KLING_ENDPOINT: string =
-  "fal-ai/kling-video/v3/pro/image-to-video";
+export const SEEDANCE_15_ENDPOINT: string =
+  "fal-ai/bytedance/seedance/v1.5/pro/image-to-video";
 
 /** Bir fal kuyruk isini takip etmek icin gereken referanslar. */
 export interface FalJobRef {
@@ -56,24 +56,26 @@ export async function submitFrame(
   };
 }
 
-/** Kling prompt'unu makul bir sinirda tut (cok uzun prompt reddedilebilir). */
+/** Seedance 1.5 Pro prompt siniri. */
 const VIDEO_PROMPT_MAX = 2500;
 
-/** Kling Video v3 Pro i2v video uretimini queue'ya gonderir (9:16). */
+/** Seedance 1.5 Pro i2v video uretimini queue'ya gonderir (9:16, sesli, 720p). */
 export async function submitVideo(
   prompt: string,
   imageUrl: string,
   duration: string = "5"
 ): Promise<FalJobRef> {
   const safePrompt = prompt.slice(0, VIDEO_PROMPT_MAX);
-  // Kling v3 Pro "5" veya "10" saniye destekler.
+  // Seedance 1.5 Pro 4-12 sn araligini destekler.
   const safeDuration = duration === "10" ? "10" : "5";
-  const sub = await fal.queue.submit(KLING_ENDPOINT, {
+  const sub = await fal.queue.submit(SEEDANCE_15_ENDPOINT, {
     input: {
       image_url: imageUrl,
       prompt: safePrompt,
       duration: safeDuration,
       aspect_ratio: "9:16",
+      resolution: "720p",
+      generate_audio: true,
     },
   });
   return {
@@ -128,7 +130,7 @@ export async function checkStatusByUrl(
   return { status: "COMPLETED", url: extractMediaUrl(data), raw: data };
 }
 
-/** flux ({images:[{url}]}) ve kling ({video:{url}}) ciktilarini destekler. */
+/** flux ({images:[{url}]}) ve seedance ({video:{url}}) ciktilarini destekler. */
 function extractMediaUrl(data: Record<string, unknown>): string | undefined {
   const video = data.video as { url?: string } | undefined;
   if (video?.url) return video.url;
