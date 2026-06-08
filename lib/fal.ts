@@ -19,8 +19,8 @@ fal.config({ credentials: FAL_KEY });
 // Not: tip kasitli olarak `string` -> @fal-ai/client InputType<string> = Record<string, any>
 // boylece image_size / aspect_ratio gibi alanlar tip hatasi vermez.
 export const FLUX_ENDPOINT: string = "fal-ai/flux-pro/v1.1/redux";
-export const SEEDANCE_ENDPOINT: string =
-  "bytedance/seedance-2.0/image-to-video";
+export const KLING_ENDPOINT: string =
+  "fal-ai/kling-video/v3/pro/image-to-video";
 
 /** Bir fal kuyruk isini takip etmek icin gereken referanslar. */
 export interface FalJobRef {
@@ -56,26 +56,24 @@ export async function submitFrame(
   };
 }
 
-/** Seedance prompt'unu makul bir sinirda tut (cok uzun prompt reddedilebilir). */
-const VIDEO_PROMPT_MAX = 2400;
+/** Kling prompt'unu makul bir sinirda tut (cok uzun prompt reddedilebilir). */
+const VIDEO_PROMPT_MAX = 2500;
 
-/** Seedance 2.0 i2v video uretimini queue'ya gonderir (9:16, sesli). */
+/** Kling Video v3 Pro i2v video uretimini queue'ya gonderir (9:16). */
 export async function submitVideo(
   prompt: string,
   imageUrl: string,
   duration: string = "5"
 ): Promise<FalJobRef> {
   const safePrompt = prompt.slice(0, VIDEO_PROMPT_MAX);
-  // Seedance yalnizca "auto"/"4".."15" string degerlerini kabul eder.
+  // Kling v3 Pro "5" veya "10" saniye destekler.
   const safeDuration = duration === "10" ? "10" : "5";
-  const sub = await fal.queue.submit(SEEDANCE_ENDPOINT, {
+  const sub = await fal.queue.submit(KLING_ENDPOINT, {
     input: {
       image_url: imageUrl,
       prompt: safePrompt,
       duration: safeDuration,
-      resolution: "720p",
       aspect_ratio: "9:16",
-      generate_audio: true,
     },
   });
   return {
@@ -130,7 +128,7 @@ export async function checkStatusByUrl(
   return { status: "COMPLETED", url: extractMediaUrl(data), raw: data };
 }
 
-/** flux ({images:[{url}]}) ve seedance ({video:{url}}) ciktilarini destekler. */
+/** flux ({images:[{url}]}) ve kling ({video:{url}}) ciktilarini destekler. */
 function extractMediaUrl(data: Record<string, unknown>): string | undefined {
   const video = data.video as { url?: string } | undefined;
   if (video?.url) return video.url;

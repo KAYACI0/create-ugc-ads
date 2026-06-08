@@ -162,7 +162,7 @@ export default function Home() {
           "image"
         );
 
-        setStep(stepKey, "active", `video uretiliyor (Seedance 2.0, ${duration}sn)`);
+        setStep(stepKey, "active", `video uretiliyor (Kling v3 Pro, ${duration}sn)`);
         const vid = await postJson<{
           statusUrl: string;
           responseUrl: string;
