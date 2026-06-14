@@ -162,7 +162,7 @@ export default function Home() {
           "image"
         );
 
-        setStep(stepKey, "active", `video uretiliyor (Seedance 1.5 Pro, ${duration}sn)`);
+        setStep(stepKey, "active", `video uretiliyor (Seedance 2, ${duration}sn)`);
         const vid = await postJson<{
           statusUrl: string;
           responseUrl: string;

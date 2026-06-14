@@ -1,7 +1,7 @@
 /**
  * fal.ai istemci sarmalayicisi.
- *   - Kare  : fal-ai/flux-pro/v1.1/redux            (Flux 1.1 Pro, image-to-image)
- *   - Video : bytedance/seedance-2.0/image-to-video (Seedance 2.0, sesli, 9:16)
+ *   - Kare  : fal-ai/flux-pro/v1.1/redux              (Flux 1.1 Pro, image-to-image)
+ *   - Video : fal-ai/bytedance/seedance/v2/image-to-video (Seedance 2, sesli, 9:16)
  *
  * Vercel uyumu icin queue API: submit -> request_id + status_url/response_url,
  * sonra tarayicidan polling. status_url/response_url'yi submit yanitindan
@@ -19,8 +19,8 @@ fal.config({ credentials: FAL_KEY });
 // Not: tip kasitli olarak `string` -> @fal-ai/client InputType<string> = Record<string, any>
 // boylece image_size / aspect_ratio gibi alanlar tip hatasi vermez.
 export const FLUX_ENDPOINT: string = "fal-ai/flux-pro/v1.1/redux";
-export const SEEDANCE_15_ENDPOINT: string =
-  "fal-ai/bytedance/seedance/v1.5/pro/image-to-video";
+export const SEEDANCE_V2_ENDPOINT: string =
+  "fal-ai/bytedance/seedance/v2/image-to-video";
 
 /** Bir fal kuyruk isini takip etmek icin gereken referanslar. */
 export interface FalJobRef {
@@ -56,19 +56,18 @@ export async function submitFrame(
   };
 }
 
-/** Seedance 1.5 Pro prompt siniri. */
+/** Seedance 2 prompt siniri. */
 const VIDEO_PROMPT_MAX = 2500;
 
-/** Seedance 1.5 Pro i2v video uretimini queue'ya gonderir (9:16, sesli, 720p). */
+/** Seedance 2 i2v video uretimini queue'ya gonderir (9:16, sesli, 720p). */
 export async function submitVideo(
   prompt: string,
   imageUrl: string,
-  duration: string = "5"
+  duration: string = "10"
 ): Promise<FalJobRef> {
   const safePrompt = prompt.slice(0, VIDEO_PROMPT_MAX);
-  // Seedance 1.5 Pro 4-12 sn araligini destekler.
-  const safeDuration = duration === "10" ? "10" : "5";
-  const sub = await fal.queue.submit(SEEDANCE_15_ENDPOINT, {
+  const safeDuration = duration === "5" ? "5" : "10";
+  const sub = await fal.queue.submit(SEEDANCE_V2_ENDPOINT, {
     input: {
       image_url: imageUrl,
       prompt: safePrompt,
